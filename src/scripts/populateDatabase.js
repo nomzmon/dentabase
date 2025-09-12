@@ -1,12 +1,12 @@
 const mongoose = require('mongoose');
 const connectToMongo = require('./connection.js');
 
-const Account = require('../models/accounts.js');
-const Patient = require('../models/patient.js');
-const Treatment = require('../models/treatment.js');
-const MedicalHistory = require('../models/medicalHistory.js');
-const Picture = require('../models/pictures.js');
-const Service = require('../models/service.js');
+const Account = require('../../dentabase/src/models/accounts.js');
+const Patient = require('../../dentabase/src/models/patient.js');
+const Treatment = require('../../dentabase/src/models/treatment.js');
+const MedicalHistory = require('../../dentabase/src/models/medicalHistory.js');
+const Picture = require('../../dentabase/src/models/pictures.js');
+const Service = require('../../dentabase/src/models/service.js');
 
 const sampleAccounts = require('./sampleData/accountData.js');
 const samplePatients = require('./sampleData/patientData.js');
@@ -16,7 +16,7 @@ const samplePictures = require('./sampleData/pictureData.js');
 const sampleServices = require('./sampleData/serviceData.js');
 
 const bycrypt = require('bcrypt');
-const accounts = require('../models/accounts.js');
+const accounts = require('../../dentabase/src/models/accounts.js');
 const saltRounds = 10;
 
 async function dropDatabase(){
@@ -69,7 +69,7 @@ async function populateDatabase(){
             const medicalHistory = new MedicalHistory(medicalHistoryData);
             await medicalHistory.save();
         }
-        
+
         for (const pictureData of samplePictures){
             const picture = new Picture(pictureData);
             await picture.save();

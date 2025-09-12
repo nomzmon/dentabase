@@ -1,4 +1,4 @@
-// this file is essentially the api routes. 
+// this file is essentially the api routes.
 
 // will be most used libraries
 const express = require('express');
@@ -9,16 +9,16 @@ const session = require('express-session');
 const bcrypt = require('bcrypt');
 // mongoose models, add based on user stories
 
-const Patient = require('../models/patient');
-const Ortho = require('../models/orthodontics.js');
-const Treatment = require('../models/treatment');
-const Service = require('../models/service.js');
-const Account = require('../models/accounts');
-const Picture = require('../models/pictures')
-const MedicalHistory = require('../models/medicalHistory');
+const Patient = require('../../dentabase/src/models/patient.js');
+const Ortho = require('../../dentabase/src/models/orthodontics.js');
+const Treatment = require('../../dentabase/src/models/treatment.js');
+const Service = require('../../dentabase/src/models/service.js');
+const Account = require('../../dentabase/src/models/accounts.js');
+const Picture = require('../../dentabase/src/models/pictures.js')
+const MedicalHistory = require('../../dentabase/src/models/medicalHistory.js');
 const { TopologyDescription } = require('mongodb');
 const sampleTreatments = require('../scripts/sampleData/treatmentData');
-const NonPatient = require('../models/nonpatient.js');
+const NonPatient = require('../../dentabase/src/models/nonpatient.js');
 
 
 const Functions = require('../scripts/functions');
@@ -77,7 +77,7 @@ router.post('/upload-pic', upload.single('file'), (req,res) => {
             patientID: patientID
         });
 
-        
+
         picture.save().then(function(){
             if (req.file){
                 return res.json({message: 'File uploaded successfully', file: req.file});
@@ -86,13 +86,13 @@ router.post('/upload-pic', upload.single('file'), (req,res) => {
             }
         });
 
-        
+
     } catch(error){
         console.error("Error uploading picture:", error);
         res.status(500).send("Server error");
     }
 
-    
+
 });
 
 router.post('/deactivate-ortho', async function(req, res){
@@ -201,7 +201,7 @@ router.get("/report", async (req, res) => {
     try{
         let orthodontics = await Ortho.aggregate([
             { $match: { isActive: true } },  // Filter for active records
-            { $group: { 
+            { $group: {
                 _id: { patientID: "$patientID", service: "$service" },  // Group by patientID and service
                 doc: { $first: "$$ROOT" }  // Keep the first document in each group
             }},
@@ -214,15 +214,15 @@ router.get("/report", async (req, res) => {
             ortho.patientName = patient.firstName +" " +patient.lastName;
         }
 
-        const currentYear = new Date().getFullYear(); 
-        const startOfYear = new Date(currentYear, 0, 1); 
+        const currentYear = new Date().getFullYear();
+        const startOfYear = new Date(currentYear, 0, 1);
         const startOfNextYear = new Date(currentYear + 1, 0, 1);
 
         let monthlyAppointmentsCounts = [0,0,0,0,0,0,0,0,0,0,0,0];
-        
+
         const treatmentsOfYear = await Treatment.find({
             date: {
-                $gte: startOfYear, 
+                $gte: startOfYear,
                 $lt: startOfNextYear
             }
         });
@@ -230,15 +230,15 @@ router.get("/report", async (req, res) => {
         let yearlyUniqueProcedures = []; // array of jsons for unique procedures
         let servicesByMonth = {};
         const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        
+
         months.forEach(month => {
             servicesByMonth[month + "Services"] = [];
         });
-        
+
         treatmentsOfYear.forEach(treatment => {
             let month = treatment.date.getMonth(); // get the month number
             let procedure = treatment.procedure;
-        
+
             // Handle unique procedures for the year
             const uniqueProcedure = yearlyUniqueProcedures.find(p => p.name === procedure);
             if (uniqueProcedure) {
@@ -249,12 +249,12 @@ router.get("/report", async (req, res) => {
 
 
             let procedureOfMonth;
-        
+
             // Update monthly appointments count (e.g., total treatments for each month)
             switch (month) {
                 case 0: // January
                     monthlyAppointmentsCounts[0]++;
-                    
+
                     // Check if procedure exists in January's services
                     procedureOfMonth = servicesByMonth.JanServices.find(p => p.name === procedure);
                     if (procedureOfMonth) {
@@ -263,10 +263,10 @@ router.get("/report", async (req, res) => {
                         servicesByMonth.JanServices.push({ name: procedure, count: 1 });
                     }
                     break;
-                
+
                 case 1: // February
                     monthlyAppointmentsCounts[1]++;
-                    
+
                     // Check if procedure exists in February's services
                     procedureOfMonth = servicesByMonth.FebServices.find(p => p.name === procedure);
                     if (procedureOfMonth) {
@@ -275,10 +275,10 @@ router.get("/report", async (req, res) => {
                         servicesByMonth.FebServices.push({ name: procedure, count: 1 });
                     }
                     break;
-        
+
                 case 2: // March
                     monthlyAppointmentsCounts[2]++;
-                    
+
                     // Check if procedure exists in March's services
                     procedureOfMonth = servicesByMonth.MarServices.find(p => p.name === procedure);
                     if (procedureOfMonth) {
@@ -287,10 +287,10 @@ router.get("/report", async (req, res) => {
                         servicesByMonth.MarServices.push({ name: procedure, count: 1 });
                     }
                     break;
-        
+
                 case 3: // April
                     monthlyAppointmentsCounts[3]++;
-                    
+
                     // Check if procedure exists in April's services
                     procedureOfMonth = servicesByMonth.AprServices.find(p => p.name === procedure);
                     if (procedureOfMonth) {
@@ -299,10 +299,10 @@ router.get("/report", async (req, res) => {
                         servicesByMonth.AprServices.push({ name: procedure, count: 1 });
                     }
                     break;
-        
+
                 case 4: // May
                     monthlyAppointmentsCounts[4]++;
-                    
+
                     // Check if procedure exists in May's services
                     procedureOfMonth = servicesByMonth.MayServices.find(p => p.name === procedure);
                     if (procedureOfMonth) {
@@ -311,10 +311,10 @@ router.get("/report", async (req, res) => {
                         servicesByMonth.MayServices.push({ name: procedure, count: 1 });
                     }
                     break;
-        
+
                 case 5: // June
                     monthlyAppointmentsCounts[5]++;
-                    
+
                     // Check if procedure exists in June's services
                     procedureOfMonth = servicesByMonth.JunServices.find(p => p.name === procedure);
                     if (procedureOfMonth) {
@@ -323,10 +323,10 @@ router.get("/report", async (req, res) => {
                         servicesByMonth.JunServices.push({ name: procedure, count: 1 });
                     }
                     break;
-        
+
                 case 6: // July
                     monthlyAppointmentsCounts[6]++;
-                    
+
                     // Check if procedure exists in July's services
                     procedureOfMonth = servicesByMonth.JulServices.find(p => p.name === procedure);
                     if (procedureOfMonth) {
@@ -335,10 +335,10 @@ router.get("/report", async (req, res) => {
                         servicesByMonth.JulServices.push({ name: procedure, count: 1 });
                     }
                     break;
-        
+
                 case 7: // August
                     monthlyAppointmentsCounts[7]++;
-                    
+
                     // Check if procedure exists in August's services
                     procedureOfMonth = servicesByMonth.AugServices.find(p => p.name === procedure);
                     if (procedureOfMonth) {
@@ -347,10 +347,10 @@ router.get("/report", async (req, res) => {
                         servicesByMonth.AugServices.push({ name: procedure, count: 1 });
                     }
                     break;
-        
+
                 case 8: // September
                     monthlyAppointmentsCounts[8]++;
-                    
+
                     // Check if procedure exists in September's services
                     procedureOfMonth = servicesByMonth.SepServices.find(p => p.name === procedure);
                     if (procedureOfMonth) {
@@ -359,10 +359,10 @@ router.get("/report", async (req, res) => {
                         servicesByMonth.SepServices.push({ name: procedure, count: 1 });
                     }
                     break;
-        
+
                 case 9: // October
                     monthlyAppointmentsCounts[9]++;
-                    
+
                     // Check if procedure exists in October's services
                     procedureOfMonth = servicesByMonth.OctServices.find(p => p.name === procedure);
                     if (procedureOfMonth) {
@@ -371,10 +371,10 @@ router.get("/report", async (req, res) => {
                         servicesByMonth.OctServices.push({ name: procedure, count: 1 });
                     }
                     break;
-        
+
                 case 10: // November
                     monthlyAppointmentsCounts[10]++;
-                    
+
                     // Check if procedure exists in November's services
                     procedureOfMonth = servicesByMonth.NovServices.find(p => p.name === procedure);
                     if (procedureOfMonth) {
@@ -383,10 +383,10 @@ router.get("/report", async (req, res) => {
                         servicesByMonth.NovServices.push({ name: procedure, count: 1 });
                     }
                     break;
-        
+
                 case 11: // December
                     monthlyAppointmentsCounts[11]++;
-                    
+
                     // Check if procedure exists in December's services
                     procedureOfMonth = servicesByMonth.DecServices.find(p => p.name === procedure);
                     if (procedureOfMonth) {
@@ -395,12 +395,12 @@ router.get("/report", async (req, res) => {
                         servicesByMonth.DecServices.push({ name: procedure, count: 1 });
                     }
                     break;
-        
+
                 default:
                     console.log("Invalid month"); // Fallback for invalid months
             }
         });
-        
+
         let allServices = await Service.find();
 
         res.render("E_Report", {
@@ -496,15 +496,15 @@ router.put('/services/update-multiple', async (req, res) => {
 router.post("/update-treatments", async(req, res) => {
     try{
         const promises = req.body.treatments.map(async(instance) => {
-            const treatment = await Treatment.findOne({ id: instance.id });  
+            const treatment = await Treatment.findOne({ id: instance.id });
 
             treatment.date = instance.date;
             treatment.teethAffected = instance.teethAffected;
             treatment.procedure = instance.procedure;
             treatment.amountCharged = instance.amountCharged;
             treatment.amountPaid = instance.amountPaid;
-        
-        
+
+
             await treatment.save();
         });
 
@@ -536,7 +536,7 @@ router.get("/patient-information/:id", async (req, res) => {
     try {
         const patient = await Patient.findOne({id: req.params.id}).populate('treatments'); //unique id after the thing
         const fullName = `${patient.firstName} ${patient.middleName} ${patient.lastName}`;
-        
+
         let birthdate = patient.birthdate;
         const birthyear = birthdate.getFullYear();
         let birthmonth = birthdate.getMonth() + 1;
@@ -546,13 +546,13 @@ router.get("/patient-information/:id", async (req, res) => {
         }
 
         let birthday = birthdate.getDate();
-        
+
         if(birthday < 10){
             birthday = "0" + birthday;
         }
 
 
-        birthdate = birthyear + '-' + birthmonth + '-' + birthday; 
+        birthdate = birthyear + '-' + birthmonth + '-' + birthday;
 
         let fullSex = patient.sex;
 
@@ -571,7 +571,7 @@ router.get("/patient-information/:id", async (req, res) => {
         }
 
         const patientTreatments = patient.treatments;
-        
+
         patientTreatments.forEach(treatment => {
             treatment.teethAffected = treatment.teethAffected.join(', ');
             treatment.dateString = Functions.convertToDate(treatment.date);
@@ -613,7 +613,7 @@ router.get("/patient-information/:id", async (req, res) => {
             fullSex: fullSex,
             home_address: patient.homeAddress,
             occupation: patient.occupation,
-            religion: patient.religion, 
+            religion: patient.religion,
             nationality: patient.nationality,
             dental_insurance: patient.dentalInsurance,
             previous_dentist: patient.lastDentist,
@@ -707,7 +707,7 @@ try{
 } catch(error){
     console.error("Error updating patient info.", error);
 }
-    
+
 });
 
 router.get("/deactivate-patient", (req, res) => {
@@ -724,14 +724,14 @@ router.get("/deactivate-patient", (req, res) => {
 
 
 router.get("/to-do", async (req, res) => {
-    
+
     const isAuthenticated = !!req.session.isAuthenticated;
 
     if (!req.session.isAuthenticated) {
         return res.redirect('/login'); //redirect to login if not authenticated
     }
-    
-    try {   
+
+    try {
         const services = await Service.find({});
         const page = parseInt(req.query.page) || 0;
 
@@ -759,7 +759,7 @@ router.get("/to-do", async (req, res) => {
             effectiveDate: { $gte: startOfDay, $lt: endOfDay },
         });
 
-        
+
         const formattedPatients = patients.map(patient => {
             const latestTreatment = patient.treatments.length > 0 ? patient.treatments[0] : null;
 
@@ -811,7 +811,7 @@ router.post("/remove-effective-dates", async (req, res) => {
             return res.status(400).send({ success: false, message: "No patients selected for deletion." });
         }
 
-        
+
         await Patient.updateMany(
             { id: { $in: patientIds } },
             { $unset: { effectiveDate: "" } }
@@ -841,21 +841,21 @@ router.get("/services",async (req,res) =>{
     } catch (error){
         console.error("Error loading services page.", error);
     }
-    
+
 });
 
 router.get("/patient_list", async (req, res) => {
     const isAuthenticated = !!req.session.isAuthenticated;
     try {
         const searchQuery = req.query.search || "";
-        const page = parseInt(req.query.page) || 1; 
-        const limit = 10; 
-        const skip = (page - 1) * limit; 
+        const page = parseInt(req.query.page) || 1;
+        const limit = 10;
+        const skip = (page - 1) * limit;
 
         const services = await Service.find();
 
         // Query to find patients
-        const patients = await Patient.find({ 
+        const patients = await Patient.find({
             isActive: true,
             $or: [
                 { firstName: { $regex: searchQuery, $options: 'i' } },
@@ -885,7 +885,7 @@ router.get("/patient_list", async (req, res) => {
 
             if (populatedPatient.treatments.length > 0) {
                 const latestTreatment = populatedPatient.treatments[0];
-                const latestDate = Functions.convertToDate(latestTreatment.date); 
+                const latestDate = Functions.convertToDate(latestTreatment.date);
                 const latestProcedure = latestTreatment.procedure;
 
                 populatedPatient.latestTreatmentDate = latestDate;
@@ -973,7 +973,7 @@ router.post('/update-effective-date', async (req, res) => {
     try {
         //combine date and time
         const updatedEffectiveDate = new Date(`${effectiveDate}T${startTime}`);
-    
+
 
         // find the patient by their `id` and update `effectiveDate`
         const patient = await Patient.findOne({ id }); // Match the `id` field in MongoDB
@@ -983,7 +983,7 @@ router.post('/update-effective-date', async (req, res) => {
 
         patient.effectiveDate = updatedEffectiveDate; // update the effective date
         const newTreatment = new Treatment({
-            id: new Date().getTime(), 
+            id: new Date().getTime(),
             date: updatedEffectiveDate,
             procedure: service,
             patientID: patient.id,
@@ -1058,7 +1058,7 @@ router.get('/api/patients-by-service', Functions.isAuthenticated, async (req, re
 
         //filter patients by status
         if (statusSort) {
-            const isActiveFilter = statusSort === 'true';  
+            const isActiveFilter = statusSort === 'true';
             patients = patients.filter(patient => patient.isActive === isActiveFilter);
         }
 
@@ -1093,11 +1093,11 @@ router.get('/api/patients-by-service', Functions.isAuthenticated, async (req, re
 });
 
 router.get('/patient/:id', Functions.isAuthenticated, async (req, res) => {
-    
+
     try {
         const patientId = req.params.id;
-        const id = Number(patientId); 
-        
+        const id = Number(patientId);
+
         const patient = await Patient.findOne({ id }).populate('treatments').exec();
 
         if (!patient) {
@@ -1133,7 +1133,7 @@ router.post("/update-medical-history", async function(req, res){
             req.body.physicianSpecialty,
 
             req.body.physicianOfficeNumber,
-            
+
             req.body.prescription,
             req.body.illnessOrSurgery,
             req.body.medicalTreatment,
@@ -1159,7 +1159,7 @@ router.post("/appointments", async (req, res) => {
     try {
         const { patientID, date, startTime, endTime, procedure, dentist } = req.body;
 
-        // combine start and end 
+        // combine start and end
         const appointmentDate = new Date(date);
         const startDateTime = new Date(appointmentDate.setHours(...startTime.split(':')));
         const endDateTime = new Date(appointmentDate.setHours(...endTime.split(':')));
@@ -1206,7 +1206,7 @@ router.post('/login', async (req, res) => {
     } catch (error) {
         console.error('Error during login:', error);
         res.status(500).send('An error occurred');
-        
+
     }
 });
 router.post('/logout', (req, res) => {

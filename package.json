@@ -1,26 +1,26 @@
 {
-  "dependencies": {
-    "bcrypt": "^5.1.1",
-    "body-parser": "^1.20.3",
-    "dotenv": "^17.2.2",
-    "express": "^4.21.1",
-    "express-handlebars": "^8.0.3",
-    "express-session": "^1.18.1",
-    "mongodb": "^6.19.0",
-    "mongoose": "^8.18.1",
-    "multer": "^1.4.5-lts.1"
-  },
-  "scripts": {
-    "start": "node server.js"
-  },
   "name": "dentabase",
-  "description": "A software for storage, safekeeping and ease-of-access for dental doctors",
-  "version": "1.0.0",
-  "main": "server.js",
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-opener": "^2"
+  },
   "devDependencies": {
-    "nodemon": "^3.1.10"
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^4.6.0",
+    "typescript": "~5.8.3",
+    "vite": "^7.0.4",
+    "@tauri-apps/cli": "^2"
   }
 }

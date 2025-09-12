@@ -1,15 +1,15 @@
-const patientModel = require('../models/patient.js');
-const medicalHistoryModel = require('../models/medicalHistory.js');
-const treatmentModel = require('../models/treatment.js');
-const orthoModel = require('../models/orthodontics.js');
-const serviceModel = require('../models/service.js');
+const patientModel = require('../../dentabase/src/models/patient.js');
+const medicalHistoryModel = require('../../dentabase/src/models/medicalHistory.js');
+const treatmentModel = require('../../dentabase/src/models/treatment.js');
+const orthoModel = require('../../dentabase/src/models/orthodontics.js');
+const serviceModel = require('../../dentabase/src/models/service.js');
 
 
 function convertToDate(birthdate){
     if(birthdate){
         let birthyear = birthdate.getUTCFullYear();
         let birthmonth = birthdate.getUTCMonth() + 1;
-        
+
         if(birthmonth < 10){
             birthmonth = "0" + birthmonth;
         }
@@ -20,7 +20,7 @@ function convertToDate(birthdate){
             birthday = "0" + birthday;
         }
 
-        birthdate = birthyear + '-' + birthmonth + '-' + birthday;         
+        birthdate = birthyear + '-' + birthmonth + '-' + birthday;
     }
 
 
@@ -36,7 +36,7 @@ async function createOrtho(patientID, service){
 
         await ortho.save();
 
-            
+
         console.log("Orthodontics document successfully created.");
     } catch (error){
         console.error("Error creating orthodontics.", error);
@@ -80,7 +80,7 @@ async function getMonthlyStats(year, month){
                 $and: [
                     {$eq: [{ $month: "$date"}, month]},
                     {$eq: [{ $year: "$date"}, year]}
-                ]   
+                ]
             }
         });
 
@@ -97,9 +97,9 @@ async function getMonthlyStats(year, month){
     }
 }
 
-async function createPatient(firstName, lastName, middleName, nickname, 
-    homeAddress, birthdate, age, sex, religion, nationality, email, homeNo, 
-    occupation, dentalInsurance, officeNo, faxNo, contact, effectiveDate, 
+async function createPatient(firstName, lastName, middleName, nickname,
+    homeAddress, birthdate, age, sex, religion, nationality, email, homeNo,
+    occupation, dentalInsurance, officeNo, faxNo, contact, effectiveDate,
     guardianName, guardianOccupation, referralName, consultationReason, lastDentist, lastDentalVisit, pic) {
     var patientID = 1;
     let lastPatient = await patientModel.findOne().sort({ id: -1 });
@@ -152,22 +152,22 @@ async function createPatient(firstName, lastName, middleName, nickname,
 async function searchPatientName(patientName){
     const patient = await patientModel.find({
         $or:[
-            { firstName: { $regex: patientName, $options: 'i' } },  
-            { lastName: { $regex: patientName, $options: 'i' } }, 
-            { middleName: { $regex: patientName, $options: 'i' } }, 
-            { nickname: { $regex: patientName, $options: 'i' } } 
+            { firstName: { $regex: patientName, $options: 'i' } },
+            { lastName: { $regex: patientName, $options: 'i' } },
+            { middleName: { $regex: patientName, $options: 'i' } },
+            { nickname: { $regex: patientName, $options: 'i' } }
         ]
     })
 
     return patient;
 }
 
-async function updatePatientInfo(patientID, nickname, 
-    homeAddress, birthdate, age, sex, religion, nationality, email, homeNo, 
-    occupation, dentalInsurance, officeNo, faxNo, contact, 
+async function updatePatientInfo(patientID, nickname,
+    homeAddress, birthdate, age, sex, religion, nationality, email, homeNo,
+    occupation, dentalInsurance, officeNo, faxNo, contact,
     guardianName, guardianOccupation, referralName, consultationReason, lastDentist, lastDentalVisit){
 
-        
+
         patientModel.findOne({id: patientID}).then(function(patient){
 
             // patient.firstName = firstName;
@@ -217,7 +217,7 @@ async function createMedicalHistory(patientID, physicianName, physicianOfficeAdd
                                     , physicianOfficeNumber, prescription, illnessOrSurgery, condition
                                     , isUsingTobacco, isAlcoholOrDrugs, allergies, isPregnant, isNursing
                                     , isBirthControlPills, healthProblems){
-         
+
         let medicalHistory;
         if(isPregnant === "None" || isNursing === "None" || isBirthControlPills === "None"){
              medicalHistory = new medicalHistoryModel(
@@ -234,7 +234,7 @@ async function createMedicalHistory(patientID, physicianName, physicianOfficeAdd
                     isAlcoholOrDrugs: isAlcoholOrDrugs,
                     allergies: allergies,
                     healthProblems: healthProblems,
-                });        
+                });
         } else{
              medicalHistory = new medicalHistoryModel(
                 {
@@ -253,7 +253,7 @@ async function createMedicalHistory(patientID, physicianName, physicianOfficeAdd
                     isNursing: isNursing,
                     isBirthControlPills: isBirthControlPills,
                     healthProblems: healthProblems,
-                });            
+                });
         }
 
 
@@ -284,15 +284,15 @@ async function updateMedicalHistory(patientID, physicianName, physicianOfficeAdd
         if(isPregnant !== "None"){
             medicalHistory.isPregnant = isPregnant;
         }
-            
+
         if(isNursing !== "None"){
             medicalHistory.isNursing = isNursing;
         }
-            
+
         if(isBirthControlPills !== "None"){
             medicalHistory.isBirthControlPills = isBirthControlPills;
         }
-            
+
         medicalHistory.healthProblems = healthProblems;
 
         await medicalHistory.save();
@@ -353,7 +353,7 @@ async function createTreatment(patientID, date, teethAffected, procedure, dentis
 async function updateTreatment(treatmentID, date, teethAffected, procedure, dentist, amountCharged
                                 , amountPaid, balance, status){
 
-    const treatment = await treatmentModel.findOne({ id: treatmentID });  
+    const treatment = await treatmentModel.findOne({ id: treatmentID });
 
         treatment.date = date;
         treatment.teethAffected = teethAffected;
@@ -368,7 +368,7 @@ async function updateTreatment(treatmentID, date, teethAffected, procedure, dent
 
     await treatment.save();
 
-    
+
 
  }
 
@@ -400,7 +400,7 @@ async function getPatientsByProcedure(procedure) {
         const result = await response.json();
         console.log("Filtered patients:", result);
 
-        displayPatients(result.patients);  
+        displayPatients(result.patients);
     } catch (error) {
         console.error("Error fetching patients:", error);
     }
