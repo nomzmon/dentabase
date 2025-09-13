@@ -28,6 +28,27 @@ The website application should be accessible at `http://localhost:3000` or simpl
 The desktop application should pop up after successfully running the command
 
 ## Project Structure
+dentabase/
+├── .github/ -> github workflows
+├── .gitignore -> which files git ignores
+├── index.html -> entry file for React
+├── public/ -> static assets e.g. images, logos, fonts
+├── src/ -> contains the source code for the frontend n backend of the web app
+│   ├── App.tsx -> root UI file
+│   ├── main.tsx -> entry file that renders App.tsx to the DOM
+│   ├── models/ -> database models
+│   ├── routes/ -> API endpoints
+│   ├── scripts/
+│   ├── server.js -> express server file
+│   ├── style.css -> global styles
+├── src-tauri/ -> contains source code for the desktop app
+│   ├── .gitignore -> ignores build artifacts for tauri
+│   ├── capabilities/ -> app permissions
+│   ├── icons/ -> app icons
+│   ├── src/ -> source code for the backend
+│   │   ├── lib.rs
+│   │   ├── main.rs -> entry file for the app (starts the backend)
+│   ├── target/ -> build dir
 
 ## Troubleshooting
 Ensure that the environment is properly configured for both the frontend and backend.
