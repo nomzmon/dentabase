@@ -298,3 +298,7 @@ margin-top: 0.3%;
 
 }
 
+ul.sidebar-bottom-buttons {
+    margin-top: auto;
+    padding-bottom: 20px;
+}
