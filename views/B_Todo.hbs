@@ -80,7 +80,7 @@
       <tr>
         <th>
           <label class="appointment-checkbox">
-            <input type="checkbox" value="{{check_patient}}" onclick="toggleRowHighlight(this)" />
+            <input id="selectAll" type="checkbox" onclick="toggleSelectAll(this)"/>
             <span class="custom-checkbox"></span>
           </label>
         </th>
@@ -121,13 +121,13 @@
   <tr id = "row-{{id}}">
     <td>
       <label class="appointment-checkbox">
-        <input type="checkbox" onclick="toggleRowHighlight(this)" value="{{id}}" />
+        <input type="checkbox" class="patient-checkbox" onclick="toggleRowHighlight(this)" value="{{id}}" />
         <span class="custom-checkbox"></span>
       </label>
     </td>
 
     <td>
-      <div class="name" {{#if id}} onclick="window.location.href='/patient-information/{{id}}'" style="cursor: pointer;"
+      <div class="name" {{#if isPatient}} onclick="window.location.href='/patient-information/{{id}}'" style="cursor: pointer;"
         {{/if}}readonly>{{firstName}} {{lastName}}
       </div>
     </td>
@@ -164,3 +164,22 @@
 </div>
 <script src="B_Todo.js"></script>
 <script src="O_Filter_form.js"></script>
+<script>
+    function toggleSelectAll(selectAllCheckbox){
+        const cBoxes = document.querySelectorAll(".patient-checkbox")
+        cBoxes.forEach(cb => {cb.checked = selectAllCheckbox.checked})
+    }
+
+    function toggleRowHighlight(checkbox) {
+        const cBoxes = document.querySelectorAll(".patient-checkbox");
+        const isAll = document.getElementById("selectAll");
+
+        if (!checkbox.checked) {
+            isAll.checked = false;
+        } else if ([...cBoxes].every(cb => cb.checked)) {
+            isAll.checked = true;
+            console.log("he")
+        }
+    }
+
+</script>

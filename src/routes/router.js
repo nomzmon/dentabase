@@ -759,7 +759,6 @@ router.get("/to-do", async (req, res) => {
             effectiveDate: { $gte: startOfDay, $lt: endOfDay },
         });
 
-        
         const formattedPatients = patients.map(patient => {
             const latestTreatment = patient.treatments.length > 0 ? patient.treatments[0] : null;
 
@@ -773,11 +772,12 @@ router.get("/to-do", async (req, res) => {
                     ? `${patient.effectiveDate.getHours().toString().padStart(2, '0')}:${patient.effectiveDate.getMinutes().toString().padStart(2, '0')}`
                     : "N/A",
                 latestProcedure: latestTreatment ? latestTreatment.procedure : req.query.services,
+                isPatient: true
             };
         });
         //format non-patient data to match the structure of patient data
         const formattedNonPatients = nonPatients.map(nonPatient => ({
-            id: null, // Non-patients won't have an ID
+            id: nonPatient._id, // Must add id for remove to work
             firstName: nonPatient.name.split(' ')[0] || "N/A",
             lastName: nonPatient.name.split(' ').slice(1).join(' ') || "N/A",
             contact: nonPatient.contact || "N/A",
@@ -785,7 +785,8 @@ router.get("/to-do", async (req, res) => {
             formattedTime: nonPatient.startTime
                 ? `${new Date(nonPatient.startTime).getHours().toString().padStart(2, '0')}:${new Date(nonPatient.startTime).getMinutes().toString().padStart(2, '0')}`
                 : "N/A",
-            latestProcedure: nonPatient.service // service label
+            latestProcedure: nonPatient.service, // service label
+            isPatient: false
         }));
 
         //combine patients and non-patients
@@ -810,18 +811,18 @@ router.post("/remove-effective-dates", async (req, res) => {
         if (!patientIds || patientIds.length === 0) {
             return res.status(400).send({ success: false, message: "No patients selected for deletion." });
         }
-
         
+        const nonPatientResult = await NonPatient.updateMany(
+            { _id: { $in: patientIds } },
+            { $unset: { effectiveDate: "" } }
+        );
+        const remainingIds = patientIds.filter(
+            id => !nonPatientResult.matchedCount || nonPatientResult.matchedCount === 0
+        );
         await Patient.updateMany(
-            { id: { $in: patientIds } },
+            { id: { $in: remainingIds } },
             { $unset: { effectiveDate: "" } }
-        );
-
-        await NonPatient.updateMany(
-            { id: { $in: patientIds } },
-            { $unset: { effectiveDate: "" } }
-        );
-
+        );      
         res.status(200).send({ success: true, message: "Patients successfully removed from the To-Do list." });
     } catch (error) {
         console.error("Error removing effectiveDates:", error);

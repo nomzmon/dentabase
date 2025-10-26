@@ -89,11 +89,10 @@ document.addEventListener("DOMContentLoaded", () => {
     
     deleteButton.addEventListener("click", async () => {
         // Get all checkboxes and filter for checked ones
-        const selectedCheckboxes = Array.from(document.querySelectorAll("input[type='checkbox']:checked"));
+        const selectedCheckboxes = Array.from(document.querySelectorAll("input[type='checkbox']:checked")).filter(checkbox => checkbox.id !== "selectAll");
         
         // Extract patient IDs from checkboxes
         const selectedIds = selectedCheckboxes.map(checkbox => checkbox.value);
-        
         if (selectedIds.length === 0) {
             alert("Please select at least one patient to delete.");
             return;
@@ -105,6 +104,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Send request to the server to remove the effectiveDate for each patient
         try {
+            console.log(JSON.stringify({ patientIds: selectedIds }))
             const response = await fetch("/remove-effective-dates", {
                 method: "POST",
                 headers: {
