@@ -6,7 +6,8 @@ on:
   pull_request:
     branches: [ "integration" ]
     types: [opened, reopened, closed]
-
+  workflow_dispatch:
+  
 jobs:
   build:
 
