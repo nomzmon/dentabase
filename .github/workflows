@@ -1,5 +1,5 @@
 
-name: CI - Build, Test, and Lint
+name: CI - Build, Test
 
 # This will trigger the workflow on pull requests and merge to the integration branch
 on:
