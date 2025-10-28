@@ -5,7 +5,7 @@ name: CI - Build, Test
 on:
   pull_request:
     branches: [ "integration" ]
-    types: [opened, reopened, closed]
+    types: [opened, reopened, synchronize]
   workflow_dispatch:
   
 jobs:
