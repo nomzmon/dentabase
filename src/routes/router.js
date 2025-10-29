@@ -811,16 +811,14 @@ router.post("/remove-effective-dates", async (req, res) => {
         if (!patientIds || patientIds.length === 0) {
             return res.status(400).send({ success: false, message: "No patients selected for deletion." });
         }
-        
-        const nonPatientResult = await NonPatient.updateMany(
-            { _id: { $in: patientIds } },
-            { $unset: { effectiveDate: "" } }
-        );
-        const remainingIds = patientIds.filter(
-            id => !nonPatientResult.matchedCount || nonPatientResult.matchedCount === 0
+
+        const nonPatientIDs = patientIds.filter(id => isNaN(Number(id)))
+        const patientIDs = patientIds.filter(id => !isNaN(Number(id)))
+        const nonPatientResult = await NonPatient.deleteMany(
+            { _id: { $in: nonPatientIDs } }
         );
         await Patient.updateMany(
-            { id: { $in: remainingIds } },
+            { id: { $in: patientIDs } },
             { $unset: { effectiveDate: "" } }
         );      
         res.status(200).send({ success: true, message: "Patients successfully removed from the To-Do list." });
