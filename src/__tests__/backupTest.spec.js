@@ -165,9 +165,75 @@ describe('Backup Feature', () => {
     });
 
     describe('Data Restoration', () => {
-      it('should handle empty collections in backup', async () => {
+      it('should update accordingly on new and changed documents', async () => {
         // Arrange
-        fs.readJson.mockResolvedValue([]);
+        const backupPatients = [
+          { _id: '1', name: 'John Doe', age: 26 }, // changed
+        ];
+        const backupAppointments = [{ _id: 'A1', patientId: '1', date: '2025-10-28' }];
+
+        fs.readJson.mockImplementation(async (filePath) => {
+          if (filePath.includes('patients.json')) return backupPatients;
+          if (filePath.includes('appointments.json')) return backupAppointments;
+        });
+        // Act
+        await loadBackup(baseDir);
+        // Assert
+        expect(mockCollections.patients.updateOne).toHaveBeenCalledWith(
+          { _id: '1' },
+          { $set: { name: 'John Doe', age: 26 } }
+        );
+        expect(mockCollections.patients.insertMany).not.toHaveBeenCalled();
+        expect(mockCollections.patients.deleteMany).not.toHaveBeenCalled();
+      });
+
+      it('should only insert the discovered missing documents', async () => {
+        // Arrange
+        const backupPatients = [
+          { _id: '1', name: 'John Doe', age: 25 }, // existing
+          { _id: '2', name: 'Jane Smith', age: 28 } // missing
+          ];
+
+        const backupAppointments = [{ _id: 'A1', patientId: '1', date: '2025-10-28' }];
+
+        fs.readJson.mockImplementation(async (filePath) => {
+          if (filePath.includes('patients.json')) return backupPatients;
+          if (filePath.includes('appointments.json')) return backupAppointments;
+        });
+
+        // Act & Assert
+        await loadBackup(baseDir);
+        expect(mockCollections.patients.insertMany).toHaveBeenCalledWith([{ _id: '2', name: 'Jane Smith', age: 28 }]);
+        expect(mockCollections.patients.deleteMany).not.toHaveBeenCalled();
+        expect(mockCollections.patients.updateOne).not.toHaveBeenCalled();
+        expect(mockCollections.appointments.insertMany).not.toHaveBeenCalled();
+        expect(mockCollections.appointments.deleteMany).not.toHaveBeenCalled();
+        expect(mockCollections.appointments.updateOne).not.toHaveBeenCalled();
+      });
+
+      it('should not insert, delete, or update on identical data', async () => {
+        // Arrange
+        const backupPatients = [{ _id: '1', name: 'John Doe', age: 25 }];
+        const backupAppointments = [{ _id: 'A1', patientId: '1', date: '2025-10-28' }];
+
+        fs.readJson.mockImplementation(async (filePath) => {
+          if (filePath.includes('patients.json')) return backupPatients;
+          if (filePath.includes('appointments.json')) return backupAppointments;
+        });
+        // Act
+        await loadBackup(baseDir);
+        // Assert
+        expect(mockCollections.patients.insertMany).not.toHaveBeenCalled();
+        expect(mockCollections.patients.deleteMany).not.toHaveBeenCalled();
+        expect(mockCollections.patients.updateOne).not.toHaveBeenCalled();
+        expect(mockCollections.appointments.insertMany).not.toHaveBeenCalled();
+        expect(mockCollections.appointments.deleteMany).not.toHaveBeenCalled();
+        expect(mockCollections.appointments.updateOne).not.toHaveBeenCalled();
+      });
+
+    it('should handle empty collections in backup', async () => {
+      // Arrange
+      fs.readJson.mockResolvedValue([]);
 
         // Act
         await loadBackup(baseDir);
