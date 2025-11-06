@@ -15,7 +15,16 @@
   },
   "scripts": {
     "start": "node server.js",
-    "test": "jest"
+    "test": "jest --ci --reporters=default --reporters=jest-junit"
+  },
+  "jest-junit": {
+    "outputDirectory": "reports",
+    "outputName": "jest-junit.xml",
+    "ancestorSeparator": " › ",
+    "uniqueOutputName": "false",
+    "suiteNameTemplate": "{filepath}",
+    "classNameTemplate": "{classname}",
+    "titleTemplate": "{title}"
   },
   "name": "dentabase",
   "description": "A software for storage, safekeeping and ease-of-access for dental doctors",
@@ -26,6 +35,7 @@
   "license": "ISC",
   "devDependencies": {
     "jest": "^30.2.0",
+    "jest-junit": "^16.0.0",
     "nodemon": "^3.1.10"
   }
 }

@@ -31,6 +31,19 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Test Report
+        uses: dorny/test-reporter@v2
+        if: ${{ !cancelled()}}
+        with:
+          name: Jest Tests
+          path: './reports/*.xml'
+          reporter: 'jest-junit'
+          list-suites: 'all'
+          list-tests: 'all'
+          fail-on-empty: false
+          fail-on-error: false
+          only-summary: false
+
       # Commented out steps because of missing scripts in package.json and lint errors
 
       #- name: Run lint
