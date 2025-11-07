@@ -2,6 +2,8 @@
 name: CI - Build & Test
 
 on:
+  push:
+    branches: [feature/test-reports]
   pull_request:
     branches: [integration]
     types: [opened, reopened, synchronize]
