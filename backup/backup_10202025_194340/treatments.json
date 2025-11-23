@@ -1,0 +1,32 @@
+[
+  {
+    "_id": "68c2d27b3fc0d43bb22a9866",
+    "id": 1757598331060,
+    "date": "2025-09-12T15:47:00.000Z",
+    "teethAffected": [],
+    "procedure": "Service",
+    "status": "ongoing",
+    "patientID": 2,
+    "__v": 0
+  },
+  {
+    "_id": "68eff1241f4ef73cff058d44",
+    "id": 1760555300994,
+    "date": "2025-10-16T17:01:00.000Z",
+    "teethAffected": [],
+    "procedure": "Service",
+    "status": "ongoing",
+    "patientID": 1,
+    "__v": 0
+  },
+  {
+    "_id": "68eff12e1f4ef73cff058d48",
+    "id": 1760555310786,
+    "date": "2025-10-17T17:01:00.000Z",
+    "teethAffected": [],
+    "procedure": "Service",
+    "status": "ongoing",
+    "patientID": 1,
+    "__v": 0
+  }
+]
