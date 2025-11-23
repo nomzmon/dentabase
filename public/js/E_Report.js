@@ -85,4 +85,80 @@ document.addEventListener('DOMContentLoaded', () => {
             appointmentsChart.update();
         });
     }
+    // Second Chart
+    const monthMap = [
+        {value: 0, month: 'Jan'}, {value: 1, month: 'Feb'}, {value: 2, month: 'Mar'},
+        {value: 3, month: 'Apr'}, {value: 4, month: 'May'}, {value: 5, month: 'Jun'},
+        {value: 6, month: 'Jul'}, {value: 7, month: 'Aug'}, {value: 8, month: 'Sep'},
+        {value: 9, month: 'Oct'}, {value: 10, month: 'Nov'}, {value: 11, month: 'Dec'}
+    ];
+    function calculateRevenueTrends(selectedYear, selectedService) {
+        let monthlyTotals = {};
+        monthMap.forEach(m => monthlyTotals[m.value] = 0);
+        rawAppointmentData.forEach(appt => {
+            if (!appt.date || !appt.amount || !appt.service) return;
+            const d = new Date(appt.date);
+            const apptYear = d.getFullYear().toString();
+            const apptMonthIndex = d.getMonth();
+            const amount = parseFloat(appt.amount);
+            const yearMatch = (selectedYear === "All") || (apptYear === selectedYear);
+            const serviceMatch = (selectedService === "All") || (appt.service === selectedService);
+            if (yearMatch && serviceMatch) {
+                monthlyTotals[apptMonthIndex] += amount;
+            }
+        });
+        return monthMap.map(m => monthlyTotals[m.value]);
+    }
+
+    const revCtx = document.getElementById('revenueChart');
+    
+    if (revCtx) {
+        const initialData = calculateRevenueTrends("All", "All");
+
+        window.revenueChart = new Chart(revCtx.getContext('2d'), {
+            type: 'line', 
+            data: {
+                labels: monthMap.map(m => m.month), 
+                datasets: [{
+                    label: 'Revenue',
+                    data: initialData, 
+                    backgroundColor: '#4a69bd',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return ' $' + context.raw.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                    }
+                }
+            }
+        });
+        const updateBtn = document.getElementById('applyRevFilterBtn');
+        if (updateBtn) {
+            updateBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+
+                const yearVal = document.getElementById('revYearSelect').value;
+                const serviceVal = document.getElementById('revServiceSelect').value;
+                console.log(`Filtering Revenue: Year=${yearVal}, Service=${serviceVal}`);
+                const newData = calculateRevenueTrends(yearVal, serviceVal);
+                window.revenueChart.data.datasets[0].data = newData;
+                window.revenueChart.data.datasets[0].label = `Revenue (${serviceVal})`;
+                
+                window.revenueChart.update();
+            });
+        }
+    }
 });

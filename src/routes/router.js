@@ -199,21 +199,34 @@ router.post('/create-treatment', function(req, res){
 
 router.get("/report", async (req, res) => {
     try{
-        
-        let allServices = await Service.find();
-        let allAppointmentsData = await Treatment.find();
+        let allServices = await Service.find()
+        let allAppointmentsData = await Treatment.find()
         const availableYears = [...new Set(allAppointmentsData.map(appt => {
             return new Date(appt.date).getFullYear(); 
-        }))];
-        availableYears.sort((a, b) => b - a);
+        }))]
+        availableYears.sort((a, b) => b - a)
 
+        const months = [
+            {value: 0, month: 'Jan'},
+            {value: 1, month: 'Feb'},
+            {value: 2, month: 'Mar'},
+            {value: 3, month: 'Apr'},
+            {value: 4, month: 'May'},
+            {value: 5, month: 'Jun'},
+            {value: 6, month: 'Jul'},
+            {value: 7, month: 'Aug'},
+            {value: 8, month: 'Sep'},
+            {value: 9, month: 'Oct'},
+            {value: 10, month: 'Nov'},
+            {value: 11, month: 'Dec'}
+            ]
         res.render("E_Report", {
             // Send all appointments
             allAppointmentsData: allAppointmentsData,
             // For Filter
             allServices: allServices,
             availableYears: availableYears,
-            // Add Patients
+            months: months,
         });
 
 

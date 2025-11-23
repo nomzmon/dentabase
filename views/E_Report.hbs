@@ -1,7 +1,12 @@
 <script>
     const rawAppointmentData = [
         {{#each allAppointmentsData}}
-        {date: "{{this.date}}", service: "{{this.service}}"},
+        {
+            date: "{{this.date}}", 
+            service: "{{this.service}}", 
+            amount: "{{this.amountCharged}}",
+            status: "{{this.status}}"
+        }, 
         {{/each}}
     ];
     
@@ -46,7 +51,6 @@
     <div class="dashboard-group">
 
         <!-- `Card for Appointments -->
-
         <div class="card">
             <div class="card-header">
                 <h3>Monthly Appointments</h3>
@@ -84,44 +88,42 @@
 
 
 
-        <!-- Card for Orthodontic Patients -->
+        <!-- Card for Revenue -->
         <div class="card">
-            <h3>Orthodontic Patients</h3>
-
-            <p id="active-patients-count">Patients: {{orthoCount}}</p>
-            <!--  <button class="filter-button" onclick="toggleFilterDropdown()">Filter</button>-->
-
-            <form id="active-orthodontics-form" name="active-orthodontics-form">
-                <table class="patient-table">
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th>Name</th>
-                            <th>Services</th>
-                        </tr>
-                    </thead>
-
-                    
-                        <tbody id="patientTableBody">
-                            {{#each patients}}
-                            <tr data-appointment-month="january">
-                                <td><input type="checkbox" name="active-patient-row" class="patient-checkbox" value="{{{patientID}}} {{{service}}}"/></td>
-                                <td>{{{patientName}}}</td>
-                                <td>{{{service}}}</td>
-                            </tr>
-                            {{/each}}
-
-                        </tbody>
-                    
-                </table>
-                <button class="mark-ortho-button" type="submit">Mark Orthodontics Finished</button>
-            </form>
+            <div class="card-header">
+                <h3>Monthly Revenue</h3>
+            </div>
+            <div class="filter-controls-row">
+                <!-- Filter Year -->
+                <div class="filter-group">
+                    <label for="revYearSelect">Year:</label>
+                    <select id="revYearSelect" name="year">
+                    <option value="All">Select</option>
+                    {{#each availableYears}}
+                        <option value="{{this}}">{{this}}</option>
+                    {{/each}}
+                    </select>
+                </div>
+                <!-- Filter Service -->
+                <div class="filter-group">
+                    <label for="revServiceSelect">Month:</label>
+                    <select id="revServiceSelect" name="month">
+                    <option value="All">All Services</option>
+                        {{#each allServices}}
+                            <option value="{{{this.service}}}">{{{this.service}}}</option>
+                        {{/each}}
+                    </select>
+                </div>
+                <button id="applyRevFilterBtn" class="action-button" type="button">Filter</button>
+            </div>
+            <div class="chart-container">
+                <canvas id="revenueChart" class="appointment-chart"></canvas>
+            </div>
         </div>
-
         <!-- `END DASHBOARD GROUP-->
-
     </div>
+</div>
 
-    <!--To render the charts-->
-    <script src="/js/E_Report.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!--To render the charts-->
+<script src="/js/E_Report.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
