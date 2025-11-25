@@ -26,6 +26,8 @@ const Functions = require('../scripts/functions');
 const router = Router();
 router.use(express.json());
 
+router.use(express.urlencoded({ extended: true }));
+
 const app = express();
 app.use(express.static('public'));
 
@@ -648,6 +650,9 @@ router.get("/patient-information/:id", async (req, res) => {
             isBirthControlPills: medicalHistory ? medicalHistory.isBirthControlPills : "N/A",
             healthProblems: medicalHistory ? medicalHistory.healthProblems : "N/A",
 
+            //dentalChart
+            dentalChart: JSON.stringify(patient.dentalChart || []),
+            dentalExam: JSON.stringify(patient.dentalExam || {}),
 
             //treatments
             treatments: patientTreatments,
@@ -1220,5 +1225,45 @@ router.post('/logout', (req, res) => {
     });
 });
 
+
+// --- DENTAL CHART SAVE ROUTE (FIXED) ---
+router.post('/save-dental-chart', async (req, res) => {
+    try {
+        const patientID = req.body.patientID;
+        
+        // Check if data is valid before parsing
+        if (!req.body.chartData || !req.body.examData) {
+            return res.status(400).json({ message: "Missing chart data." });
+        }
+
+        const chartData = JSON.parse(req.body.chartData);
+        const examData = JSON.parse(req.body.examData);
+
+        console.log(`Saving Dental Chart for Patient ID: ${patientID}`);
+
+        // Use findOneAndUpdate to bypass VersionError (__v)
+        const updatedPatient = await Patient.findOneAndUpdate(
+            { id: patientID }, // Find by your custom ID
+            { 
+                $set: { 
+                    dentalChart: chartData,
+                    dentalExam: examData 
+                }
+            },
+            { new: true, runValidators: false } // Return updated doc, skip strict validation if needed
+        );
+
+        if (!updatedPatient) {
+            console.error("Patient not found with ID:", patientID);
+            return res.status(404).json({ message: "Patient not found" });
+        }
+
+        res.status(200).json({ message: "Dental chart saved successfully!" });
+
+    } catch (error) {
+        console.error("Error saving dental chart:", error);
+        res.status(500).json({ message: "Server error saving chart." });
+    }
+});
 
 module.exports = router;
