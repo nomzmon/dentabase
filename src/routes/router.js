@@ -202,10 +202,20 @@ router.get("/report", async (req, res) => {
         let allServices = await Service.find()
         let allAppointmentsData = await Treatment.find()
         let allWalkIns = await NonPatient.find()
-        const availableYears = [...new Set(allAppointmentsData.map(appt => {
-            return new Date(appt.date).getFullYear(); 
-        }))]
-        availableYears.sort((a, b) => b - a)
+
+        // Combine dates from both appointments and walk-ins
+        const allDates = [
+            ...allAppointmentsData.map(appt => appt.date),
+            ...allWalkIns.map(walkIn => walkIn.effectiveDate)
+        ];
+
+        const availableYears = [...new Set(allDates
+            .filter(d => d)
+            .map(d => new Date(d).getFullYear())
+        )];
+
+        availableYears.sort((a, b) => b - a);
+
         const months = [
             {value: 0, month: 'Jan'},
             {value: 1, month: 'Feb'},
