@@ -134,7 +134,14 @@ function createTooth(id, pos) {
     const graphic = document.createElement('div');
     graphic.className = 'tooth-graphic';
 
-    const surfs = [{c:'s-top',d:'B/L'},{c:'s-right',d:'D'},{c:'s-bottom',d:'B/L'},{c:'s-left',d:'M'},{c:'s-center',d:'O'}];
+    // FIX: Unique IDs for every surface so they save/load independently
+    const surfs = [
+        {c:'s-top', d:'Top'}, 
+        {c:'s-right', d:'Right'}, 
+        {c:'s-bottom', d:'Bottom'}, 
+        {c:'s-left', d:'Left'}, 
+        {c:'s-center', d:'Center'}
+    ];
     
     surfs.forEach(s => {
         const div = document.createElement('div');
