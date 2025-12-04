@@ -9,6 +9,14 @@
         }, 
         {{/each}}
     ];
+    const rawWalkIns = [
+        {{#each allWalkIns}}
+        {
+            date: "{{this.effectiveDate}}",
+            service: "{{this.service}}"
+        },
+        {{/each}}
+    ]
 </script>
 
 
