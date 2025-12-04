@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                return ' $' + context.raw.toLocaleString();
+                                return ' ₱' + context.raw.toLocaleString();
                             }
                         }
                     }
