@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const response = await fetch('/non-patient-appointment', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, email, contact, effectiveDate, startTime, service}),
+                    body: JSON.stringify({ name, email, contact, effectiveDate, startTime, endTime, service}),
                 });
 
                 if (response.ok) {

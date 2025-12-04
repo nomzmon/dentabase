@@ -782,55 +782,63 @@ router.get("/", async (req, res) => {
 });
 
 router.post('/update-effective-date', async (req, res) => {
-    const { id, effectiveDate, startTime, service} = req.body; // `id` is passed here
+    const { id, effectiveDate, startTime, endTime, service } = req.body;
 
     try {
-        //combine date and time
-        const updatedEffectiveDate = new Date(`${effectiveDate}T${startTime}`);
-    
+        if (!id || !effectiveDate || !startTime || !endTime || !service) {
+            return res.status(400).json({ message: 'Missing required fields' });
+        }
 
-        // find the patient by their `id` and update `effectiveDate`
-        const patient = await Patient.findOne({ id }); // Match the `id` field in MongoDB
+        const startDateTime = new Date(`${effectiveDate}T${startTime}`);
+        const endDateTime = new Date(`${effectiveDate}T${endTime}`);
+
+        const patient = await Patient.findOne({ id });
         if (!patient) {
             return res.status(404).json({ message: 'Patient not found' });
         }
 
-        patient.effectiveDate = updatedEffectiveDate; // update the effective date
+        patient.effectiveDate = startDateTime;
+
         const newTreatment = new Treatment({
-            id: new Date().getTime(), 
-            date: updatedEffectiveDate,
+            id: new Date().getTime(),
+            date: startDateTime,
+            startTime: startDateTime,
+            endTime: endDateTime,
             procedure: service,
             patientID: patient.id,
             status: 'ongoing',
         });
+
         await newTreatment.save();
         patient.treatments.push(newTreatment._id);
+        await patient.save();
 
-        await patient.save(); //save changes to the database
-        res.status(200).json({ message: 'Added to To-Do', effectiveDate: updatedEffectiveDate });
+        res.status(200).json({ message: 'Added to To-Do', startTime: startDateTime, endTime: endDateTime });
     } catch (error) {
         console.error('Error updating effective date:', error);
         res.status(500).json({ message: 'Error updating effective date' });
     }
 });
 
+
 router.post('/non-patient-appointment', async (req, res) => {
     try {
-        const { name, email, contact, effectiveDate, startTime, service } = req.body;
+        const { name, email, contact, effectiveDate, startTime, endTime, service } = req.body;
 
-        //validate required fields
-        if (!name || !email || !contact || !effectiveDate || !startTime || !service) {
+        if (!name || !email || !contact || !effectiveDate || !startTime || !endTime || !service) {
             return res.status(400).json({ message: 'All fields are required for a non-patient appointment.' });
         }
 
-        //create the appointment
         const appointmentStart = new Date(`${effectiveDate}T${startTime}`);
+        const appointmentEnd = new Date(`${effectiveDate}T${endTime}`);
+
         const nonPatientAppointment = new NonPatient({
             name,
             contact,
             email,
             effectiveDate: appointmentStart,
             startTime: appointmentStart,
+            endTime: appointmentEnd,
             service
         });
 
@@ -842,6 +850,7 @@ router.post('/non-patient-appointment', async (req, res) => {
         return res.status(500).json({ message: 'Internal server error.' });
     }
 });
+
 
 router.get('/api/unique-services', Functions.isAuthenticated, async (req, res) => {
     try {

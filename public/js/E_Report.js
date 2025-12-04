@@ -127,6 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
             appointmentsChart.update();
         });
     }
+
     // Second Chart
     const monthMap = [
         {value: 0, month: 'Jan'}, {value: 1, month: 'Feb'}, {value: 2, month: 'Mar'},
@@ -204,3 +205,204 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
+
+function getPeakTimesDataMatrix(year) {
+    const startHour = 8;
+    const endHour = 19;
+    const hoursCount = endHour - startHour;
+
+    const matrix = Array.from({ length: 7 }, () => Array(hoursCount).fill(0));
+
+    const allAppointments = rawAppointmentData.concat(rawWalkIns).filter(appt => {
+        if (!appt.date) return false;
+
+        const start = new Date(appt.startTime || appt.date);
+        const end = appt.endTime
+            ? new Date(appt.endTime.includes('T') ? appt.endTime : `${appt.date}T${appt.endTime}`)
+            : new Date(start.getTime() + 1 * 60 * 60 * 1000);
+
+        const apptYear = start.getFullYear().toString();
+        if (year !== "All" && apptYear !== year) return false;
+
+        let current = new Date(start);
+        while (current < end) {
+            const hour = current.getHours();
+            const day = current.getDay();
+            if (hour >= startHour && hour < endHour) {
+                matrix[day][hour - startHour]++;
+            }
+            current.setHours(current.getHours() + 1);
+        }
+
+        return true;
+    });
+
+    const data = [];
+    for (let day = 0; day < 7; day++) {
+        for (let hour = 0; hour < hoursCount; hour++) {
+            data.push({ x: hour, y: day, v: matrix[day][hour] });
+        }
+    }
+
+    return { data, startHour, endHour };
+}
+
+const dayLabels = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+const peakCtx = document.getElementById('peakTimesChart');
+if (peakCtx) {
+    const { data: heatmapData, startHour, endHour } = getPeakTimesDataMatrix("All");
+
+    window.peakTimesChart = new Chart(peakCtx.getContext('2d'), {
+        type: 'matrix',
+        data: {
+            datasets: [{
+                label: '',
+                data: heatmapData,
+                backgroundColor: ctx => {
+                    const v = ctx.dataset.data[ctx.dataIndex].v;
+                    const alpha = Math.min(0.1 + v / 5, 1);
+                    return `rgba(74,105,189,${alpha})`;
+                },
+                width: ctx => (ctx.chart.chartArea || {}).width / (endHour - startHour) - 2,
+                height: ctx => (ctx.chart.chartArea || {}).height / 7 - 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                title: { 
+                    display: true, 
+                    text: 'Peak Appointment Times (8am-6pm)',
+                    padding: { top: 20, bottom: 20 }
+                },
+                tooltip: {
+                    callbacks: {
+                        title: () => '',
+                        label: function(ctx) {
+                            const day = dayLabels[ctx.raw.y];
+                            const hour = ctx.raw.x + startHour;
+                            const count = ctx.raw.v;
+                            return `${day}, ${hour}:00 - ${hour+1}:00 : ${count} appointment${count !== 1 ? 's' : ''}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    type: 'linear',
+                    position: 'bottom',
+                    min: 0,
+                    max: endHour - startHour - 1,
+                    ticks: {
+                        stepSize: 1,
+                        callback: v => `${v + startHour}:00`,
+                        padding: 10
+                    },
+                    title: { display: true, text: 'Hour of Day' },
+                    grid: { display: false },
+                    border: { display: false }
+                },
+                y: {
+                    type: 'linear',
+                    min: 0,
+                    max: 6,
+                    ticks: {
+                        stepSize: 1,
+                        callback: v => dayLabels[v]
+                    },
+                    title: { display: true, text: 'Day of Week' },
+                    grid: { display: false },
+                    border: { display: false }
+                }
+            }
+        }
+    });
+}
+
+document.getElementById("applyPeakFilterBtn")?.addEventListener("click", () => {
+    const year = document.getElementById("peakYearSelect").value;
+    const { data: newData } = getPeakTimesDataMatrix(year);
+    window.peakTimesChart.data.datasets[0].data = newData;
+    window.peakTimesChart.update();
+});
+
+function getServiceRevenueData(year) {
+    const allAppointments = rawAppointmentData.concat(rawWalkIns);
+
+    const revenueMap = {};
+
+    allAppointments.forEach(appt => {
+        const start = new Date(appt.startTime || appt.date);
+        const apptYear = start.getFullYear().toString();
+        if (year !== "All" && apptYear !== year) return;
+
+        const service = appt.service || "Unknown";
+        const amount = parseFloat(appt.amount || appt.amountCharged || 0);
+
+        if (!revenueMap[service]) revenueMap[service] = 0;
+        revenueMap[service] += amount;
+    });
+
+    const labels = Object.keys(revenueMap);
+    const data = labels.map(label => revenueMap[label]);
+
+    return { labels, data };
+}
+
+
+const revenueCtx = document.getElementById('serviceRevenueChart');
+if (revenueCtx) {
+    const { labels, data } = getServiceRevenueData("All");
+
+    window.serviceRevenueChart = new Chart(revenueCtx.getContext('2d'), {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: [
+                    '#4a69bd', '#e55039', '#f6b93b', '#78e08f',
+                    '#60a3bc', '#fa983a', '#b8e994', '#6a89cc'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right'
+                },
+                title: {
+                    display: true,
+                    text: 'Service Revenue Contribution',
+                    padding: { top: 20, bottom: 20 }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const value = context.raw;
+                            const total = context.chart._metasets[context.datasetIndex].total;
+                            const percentage = ((value / total) * 100).toFixed(1);
+                            return `${context.label}: ₱${value.toLocaleString()} (${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+
+document.getElementById("applyRevenueFilterBtn")?.addEventListener("click", () => {
+    const year = document.getElementById("revenueYearSelect").value;
+    const { labels, data } = getServiceRevenueData(year);
+
+    window.serviceRevenueChart.data.labels = labels;
+    window.serviceRevenueChart.data.datasets[0].data = data;
+    window.serviceRevenueChart.update();
+});
+

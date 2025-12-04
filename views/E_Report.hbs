@@ -3,20 +3,25 @@
         {{#each allAppointmentsData}}
         {
             date: "{{this.date}}", 
+            startTime: "{{this.startTime}}",
+            endTime: "{{this.endTime}}",
             service: "{{this.procedure}}", 
             amount: "{{this.amountCharged}}",
             status: "{{this.status}}"
         }, 
         {{/each}}
     ];
+
     const rawWalkIns = [
         {{#each allWalkIns}}
         {
             date: "{{this.effectiveDate}}",
+            startTime: "{{this.startTime}}",
+            endTime: "{{this.endTime}}",
             service: "{{this.service}}"
         },
         {{/each}}
-    ]
+    ];
 </script>
 
 
@@ -128,9 +133,63 @@
             </div>
         </div>
         <!-- `END DASHBOARD GROUP-->
+
+
+        <!-- Card for Peak Appointment Times -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Peak Appointment Times</h3>
+            </div>
+
+            <div class="filter-controls-row">
+                <!-- Filter Year -->
+                <div class="filter-group">
+                    <label for="peakYearSelect">Year:</label>
+                    <select id="peakYearSelect" name="year">
+                        <option value="All">All Years</option>
+                        {{#each availableYears}}
+                            <option value="{{this}}">{{this}}</option>
+                        {{/each}}
+                    </select>
+                </div>
+                <button id="applyPeakFilterBtn" class="action-button" type="button">Filter</button>
+            </div>
+            <div class="chart-container">
+                <canvas id="peakTimesChart" class="appointment-chart"></canvas>
+            </div>
+        </div>
+        <!-- `END OF PEAK APPOINTMENT TIMES-->
+        
+        <!-- Service Revenue Contribution Pie Chart -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Service Revenue Contribution</h3>
+            </div>
+
+            <div class="filter-controls-row">
+                <div class="filter-group">
+                    <label for="revenueYearSelect">Year:</label>
+                    <select id="revenueYearSelect" name="year">
+                        <option value="All">All Years</option>
+                        {{#each availableYears}}
+                            <option value="{{this}}">{{this}}</option>
+                        {{/each}}
+                    </select>
+                </div>
+                <button id="applyRevenueFilterBtn" class="action-button" type="button">Filter</button>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="serviceRevenueChart"></canvas>
+            </div>
+        </div>
+        <!-- `END OF SERVICE PIE CHART-->
+
+
     </div>
 </div>
 
-<!--To render the charts-->
-<script src="/js/E_Report.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-matrix@1.2.0/dist/chartjs-chart-matrix.min.js"></script>
+<script>Chart.register(ChartMatrix);</script>
+<script src="/js/E_Report.js"></script>
