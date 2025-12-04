@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const apptDate = new Date(appt.date);
             const apptYear = apptDate.getFullYear().toString();
             const isYearMatch = (year === "All") || (apptYear === year);
+            console.log(appt)
             const isServiceMatch = (serviceType === "All") || (appt.service === serviceType);
             return isYearMatch && isServiceMatch;
         });
@@ -20,7 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 counts[monthIndex]++;
             }
         });
-
         return counts;
     }
     const defaultYear = "All";
