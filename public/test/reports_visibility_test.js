@@ -26,11 +26,12 @@ async function runTest() {
     );
     await reportBtn.click();
 
-    //check for the main report tables/containers
+    //check for the main report sections
     const sections = [
-      { name: "Monthly Appointments", locator: By.css('div.chart-container') },
-      { name: "Orthodontic Patients", locator: By.id('patientTableBody') },
-      { name: "Frequency Distribution", locator: By.id('frequencyChart') }
+      { name: "Monthly Appointments", locator: By.id('appointmentsChart') },
+      { name: "Monthly Revenue", locator: By.id('revenueChart') },
+      { name: "Peak Appointment Times", locator: By.id('peakTimesChart') },
+      { name: "Service Revenue Contribution", locator: By.id('serviceRevenueChart') }
     ];
 
     let allVisible = true;
@@ -42,9 +43,9 @@ async function runTest() {
           10000
         );
         await driver.wait(until.elementIsVisible(elem), 5000);
-        console.log(`✅ "${section.name}" table/container is visible`);
+        console.log(`✅ "${section.name}" chart is visible`);
       } catch {
-        console.error(`❌ "${section.name}" table/container is missing, not visible, or is empty`);
+        console.error(`❌ "${section.name}" chart is missing or not visible`);
         allVisible = false;
       }
     }
@@ -60,4 +61,3 @@ async function runTest() {
 }
 
 module.exports = runTest;
-
