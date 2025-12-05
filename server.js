@@ -10,6 +10,11 @@ const populateDatabase = require('./src/scripts/populateDatabase.js');
 const functions = require('./src/scripts/functions.js');
 const patientModel = require('./src/models/patient.js');
 
+// autobackup
+const { saveBackup } = require('./src/scripts/backup');
+const BACKUP_DIR = path.resolve('./backup');
+const BACKUP_INTERVAL_MS = 30 * 60 * 1000; // 30 min backup interval
+
 require('dotenv').config();
 
 // Router
@@ -89,6 +94,25 @@ const hbs = handlebars.create({
         subtract: (a, b) => a - b // Subtraction
     }
 });
+
+async function database(){
+    try{
+        await connectToMongo();
+
+        // Automatic silent backup
+        setInterval(async () => {
+            try {
+                await saveBackup(BACKUP_DIR);
+                console.log('Automatic backup completed');
+            } catch (err) {
+                console.error('Error during automatic backup:', err);
+            }
+        }, BACKUP_INTERVAL_MS);
+
+    } catch(error){
+        console.error('Server failed to start', error);
+    }
+}
 
 // async function run(){
 

@@ -1,0 +1,55 @@
+
+name: CI - Build & Test
+
+on:
+  push:
+    branches: [integration]
+  pull_request:
+    branches: [integration]
+    types: [opened, reopened, synchronize]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [22.x]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test
+
+      - name: Generate report
+        uses: dorny/test-reporter@v2
+        if: ${{ !cancelled()}}
+        with:
+          name: Jest Tests
+          path: './reports/*.xml'
+          reporter: 'jest-junit'
+          list-suites: 'all'
+          list-tests: 'all'
+          fail-on-empty: false
+          fail-on-error: false
+          only-summary: false
+
+      # Commented out steps because of missing scripts in package.json and lint errors
+
+      #- name: Run lint
+      #  run: npm run lint
+
+      #- name: Build
+      #  run: npm run build

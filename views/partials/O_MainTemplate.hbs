@@ -40,6 +40,19 @@
             <img src="/img/icon-logout.svg" alt="Logout" class="sidebar-icon">
             <span class="sidebar-text">Logout</span></a></li>
       </ul>
+      
+      <ul class="sidebar-bottom-buttons">
+          <li><a href="#" id="backup-save-btn">
+              <img src="/img/icon-save.svg" alt="Save Backup" class="sidebar-icon">
+              <span class="sidebar-text">Save Backup</span>
+          </a></li>
+
+          <li><a href="#" id="backup-load-btn">
+              <img src="/img/icon-load.svg" alt="Load Backup" class="sidebar-icon">
+              <span class="sidebar-text">Load Backup</span>
+          </a></li>
+      </ul>
+
     </div>
   </div>
   <!-- +END SIDEBAR DESIGN-->
@@ -91,4 +104,48 @@
         });
     }
   });
+
+document.querySelector('#backup-save-btn').addEventListener('click', async (event) => {
+  event.preventDefault();
+  if (!isAuthenticated) {
+    alert('Please log in to access this feature.');
+    return;
+  }
+
+  try {
+    alert('Saving backup...');
+    const response = await fetch('/backup/save', { method: 'POST' });
+    const result = await response.json();
+    if (response.ok) {
+      alert(result.message);
+    } else {
+      alert('Failed to save backup: ' + result.error);
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Error saving backup.');
+  }
+});
+
+document.querySelector('#backup-load-btn').addEventListener('click', async (event) => {
+  event.preventDefault();
+  if (!isAuthenticated) {
+    alert('Please log in to access this feature.');
+    return;
+  }
+
+  try {
+    alert('Loading backup...');
+    const response = await fetch('/backup/load', { method: 'POST' });
+    const result = await response.json();
+    if (response.ok) {
+      alert(result.message);
+    } else {
+      alert('Failed to load backup: ' + result.error);
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Error loading backup.');
+  }
+});
 </script>
