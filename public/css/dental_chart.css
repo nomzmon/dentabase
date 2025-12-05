@@ -1,0 +1,206 @@
+:root {
+    --dc-primary: #485fe7; 
+    --dc-border: #ccc;
+    --dc-bg: #fff;
+
+    /* Clinical Colors */
+    --c-existing: #0066cc;
+    --c-treatment: #d93025;
+    --c-completed: #1e8e3e;
+    --c-watch: #f9ab00;
+    --c-missing: #80868b;
+    --c-temp: #e37400;
+}
+
+/* Layout Container */
+.dc-main-layout {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+    background: #fff;
+    box-sizing: border-box;
+    margin-bottom: 20px;
+}
+
+/* --- LEFT COLUMN: CHART & EXAM --- */
+.dc-chart-column {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    flex: 2;
+    min-width: 500px; 
+}
+
+/* TOOLS BAR */
+.dc-tools-bar {
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #eee;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.dc-tool-label { font-size: 13px; color: #666; font-weight: bold; margin-right: 5px; }
+
+.dc-tool-btn {
+    padding: 6px 12px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #333;
+    transition: all 0.2s;
+}
+.dc-tool-btn:hover { background-color: #f0f0f0; }
+.dc-tool-btn.active { background: #eef2ff; border-color: var(--dc-primary); color: var(--dc-primary); }
+.dc-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+/* THE CHART */
+.dc-chart-container {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.dc-chart-row { display: flex; gap: 15px; justify-content: center; width: 100%; margin-bottom: 10px;}
+.dc-cross-line { width: 100%; height: 4px; background: #333; margin: 15px 0; }
+.dc-quadrant { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; }
+.dc-q-right { border-right: 4px solid #333; padding-right: 15px; }
+.dc-q-left { padding-left: 15px; }
+
+/* Tooth Styling */
+.tooth-container { 
+    display: flex; flex-direction: column; align-items: center; width: 44px; 
+    padding: 2px; border-radius: 4px; border: 2px solid transparent; 
+    transition: border-color 0.2s;
+    cursor: pointer;
+}
+
+.tooth-container.selected {
+    border-color: var(--dc-primary);
+    background-color: rgba(72, 95, 231, 0.1);
+}
+
+.status-box { 
+    width: 38px; height: 20px; 
+    border: 1px solid #999; 
+    text-align: center; 
+    font-size: 10px; font-weight: bold; 
+    text-transform: uppercase;
+    margin: 2px 0;
+    background: white;
+}
+.tooth-num { font-size: 10px; color: #666; margin: 2px 0; font-weight: bold;}
+
+.tooth-graphic {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    border: 1px solid #333;
+    position: relative;
+    background: white;
+    transform: rotate(45deg);
+    overflow: hidden;
+}
+
+.surface { 
+    position: absolute; 
+    width: 50%; 
+    height: 50%; 
+    border: 1px solid #999; 
+    box-sizing: border-box; 
+}
+.surface:hover { background: #f0f0f0; }
+.s-top { top: 0; left: 0; }
+.s-right { top: 0; right: 0; }
+.s-bottom { bottom: 0; right: 0; }
+.s-left { bottom: 0; left: 0; }
+.s-center {
+    position: absolute; top: 50%; left: 50%;
+    width: 14px; height: 14px;
+    background: white; 
+    border: 1px solid #555; /* Dark border for center */
+    border-radius: 50%; transform: translate(-50%, -50%);
+    z-index: 10;
+}
+
+/* Color States */
+.cond-existing { background: var(--c-existing) !important; }
+.cond-treatment { background: var(--c-treatment) !important; }
+.cond-completed { background: var(--c-completed) !important; }
+.cond-watch { background: var(--c-watch) !important; }
+.cond-temp { background: var(--c-temp) !important; }
+.missing .tooth-graphic { opacity: 0.3; background: var(--c-missing); }
+
+/* GENERAL EXAM FORM */
+.dc-exam-section {
+    background: #fafafa; padding: 20px; border-radius: 8px; border: 1px solid #ddd;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;
+}
+.dc-exam-group h4 { margin: 0 0 10px 0; font-size: 13px; color: #555; text-transform: uppercase; border-bottom: 2px solid #ddd; padding-bottom: 5px; }
+.dc-exam-row { display: flex; align-items: center; margin-bottom: 6px; font-size: 12px; color: #333; }
+.dc-exam-input { border: none; border-bottom: 1px solid #999; font-size: 12px; padding: 0 5px; outline: none; background: transparent; margin-left: 5px; width: 80px; }
+
+/* --- RIGHT COLUMN: CODES & NOTES --- */
+.dc-right-column {
+    width: 280px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    flex: 1;
+}
+
+.dc-panel {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* NOTES PANEL STYLES */
+.dc-notes-header { font-size: 14px; font-weight: bold; color: var(--dc-primary); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;}
+.dc-notes-area {
+    width: 100%; height: 100px;
+    border: 1px solid #ccc; border-radius: 4px;
+    padding: 8px; font-size: 12px; font-family: inherit;
+    resize: vertical; box-sizing: border-box;
+}
+.dc-note-hint { font-size: 11px; color: #888; margin-top: 5px; font-style: italic;}
+
+/* CODES STYLES */
+.dc-code-category { font-size:12px; font-weight:bold; margin-bottom:5px; color: #444; }
+.dc-code-grid { display: grid; grid-template-columns: 1fr; gap: 4px; margin-bottom: 15px; }
+.dc-code-btn {
+    display: flex; justify-content: space-between;
+    padding: 6px 10px; border: 1px solid #eee; background: white;
+    cursor: pointer; font-size: 11px; border-radius: 4px;
+    color: #333;
+}
+.dc-code-btn:hover { background: #f9f9f9; border-color: #ccc; }
+.dc-code-btn.active { background: #eef2ff; border-color: var(--dc-primary); color: var(--dc-primary); }
+
+.dc-save-btn {
+    width: 100%; padding: 12px;
+    background: var(--dc-primary); color: white;
+    border: none; border-radius: 5px;
+    font-weight: bold; cursor: pointer;
+    margin-top: 10px;
+    transition: background-color 0.3s;
+}
+.dc-save-btn:hover { background: #2843da; }

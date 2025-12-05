@@ -1,3 +1,5 @@
+<link rel="stylesheet" href="/css/dental_chart.css">
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
                 const physicianName = "{{{physician_name}}}";
@@ -604,6 +606,127 @@
 <div class="frame-4">
     <div class="header dental-chart-text" id="dental-record-chart">| DENTAL RECORD CHART</div>
 
+    {{!-- START: NEW DENTAL CHART --}}
+    <div class="dc-main-layout">
+        <div class="dc-chart-column">
+            <div class="dc-tools-bar">
+                <span class="dc-tool-label">PAINT:</span>
+                <button type="button" class="dc-tool-btn active" onclick="setMode('paint', 'cond-treatment', this)"><span class="dc-dot" style="background:var(--c-treatment)"></span>Needs Treatment</button>
+                <button type="button" class="dc-tool-btn" onclick="setMode('paint', 'cond-existing', this)"><span class="dc-dot" style="background:var(--c-existing)"></span>Existing</button>
+                <button type="button" class="dc-tool-btn" onclick="setMode('paint', 'cond-completed', this)"><span class="dc-dot" style="background:var(--c-completed)"></span>Completed</button>
+                <button type="button" class="dc-tool-btn" onclick="setMode('paint', 'cond-watch', this)"><span class="dc-dot" style="background:var(--c-watch)"></span>Watch</button>
+                <button type="button" class="dc-tool-btn" onclick="setMode('paint', 'cond-temp', this)"><span class="dc-dot" style="background:var(--c-temp)"></span>Temp</button>
+                <button type="button" class="dc-tool-btn" onclick="setMode('paint', 'missing', this)"><span class="dc-dot" style="background:var(--c-missing)"></span>Missing</button>
+                <button type="button" class="dc-tool-btn" onclick="setMode('paint', 'clear', this)">Eraser</button>
+            </div>
+
+            <div class="dc-chart-container">
+                <div class="dc-chart-row"><div class="dc-quadrant dc-q-right" id="q5"></div><div class="dc-quadrant dc-q-left" id="q6"></div></div>
+                <div class="dc-chart-row"><div class="dc-quadrant dc-q-right" id="q1"></div><div class="dc-quadrant dc-q-left" id="q2"></div></div>
+                <div class="dc-cross-line"></div>
+                <div class="dc-chart-row"><div class="dc-quadrant dc-q-right" id="q4"></div><div class="dc-quadrant dc-q-left" id="q3"></div></div>
+                <div class="dc-chart-row"><div class="dc-quadrant dc-q-right" id="q8"></div><div class="dc-quadrant dc-q-left" id="q7"></div></div>
+            </div>
+
+            <div class="dc-exam-section">
+                <div class="dc-exam-group">
+                    <h4>X-ray Taken</h4>
+                    <div class="dc-exam-row">
+                        <input type="checkbox" id="xray-pa"> <label for="xray-pa" style="margin-right:5px;">Periapical</label>
+                        <input type="text" class="dc-exam-input" id="xray-pa-th" placeholder="Tth No." style="width: 60px;">
+                    </div>
+                    <div class="dc-exam-row"><input type="checkbox" id="xray-pano"> <label for="xray-pano">Panoramic</label></div>
+                    <div class="dc-exam-row"><input type="checkbox" id="xray-ceph"> <label for="xray-ceph">Cephalometric</label></div>
+                    <div class="dc-exam-row"><input type="checkbox" id="xray-occ"> <label for="xray-occ">Occlusal (Up/Low)</label></div>
+                    <div class="dc-exam-row" style="margin-top:5px;">
+                        <label>Others:</label> <input type="text" class="dc-exam-input" id="xray-other" style="flex:1;">
+                    </div>
+                </div>
+
+                <div class="dc-exam-group">
+                    <h4>Periodontal</h4>
+                    <div class="dc-exam-row"><input type="checkbox" id="perio-ging"> <label for="perio-ging">Gingivitis</label></div>
+                    <div class="dc-exam-row"><input type="checkbox" id="perio-early"> <label for="perio-early">Early Periodontitis</label></div>
+                    <div class="dc-exam-row"><input type="checkbox" id="perio-mod"> <label for="perio-mod">Moderate</label></div>
+                    <div class="dc-exam-row"><input type="checkbox" id="perio-adv"> <label for="perio-adv">Advanced</label></div>
+                </div>
+
+                <div class="dc-exam-group">
+                    <h4>Occlusion</h4>
+                    <div class="dc-exam-row">
+                        <input type="text" class="dc-exam-input" id="occ-class" style="width:60px;">
+                        <label style="margin-left: 10px;">Class (Molar)</label>
+                    </div>
+                    <div class="dc-exam-row">
+                        <input type="text" class="dc-exam-input" id="occ-overjet" style="width:60px;">
+                        <label style="margin-left: 10px;">Overjet</label>
+                    </div>
+                    <div class="dc-exam-row">
+                        <input type="text" class="dc-exam-input" id="occ-overbite" style="width:60px;">
+                        <label style="margin-left: 10px;">Overbite</label>
+                    </div>
+                </div>
+
+                <div class="dc-exam-group">
+                    <h4>Appliances</h4>
+                    <div class="dc-exam-row"><input type="checkbox" id="app-ortho"> <label for="app-ortho">Orthodontic</label></div>
+                    <div class="dc-exam-row"><input type="checkbox" id="app-stay"> <label for="app-stay">Stayplate</label></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dc-right-column">
+            <div class="dc-panel" id="notes-panel" style="display:none; border-left: 4px solid var(--dc-primary);">
+                <div class="dc-notes-header">
+                    <span>Tooth #<span id="selected-tooth-id">--</span></span>
+                    <small>Notes</small>
+                </div>
+                <textarea id="tooth-note-input" class="dc-notes-area" placeholder="Add notes..."></textarea>
+            </div>
+            
+            <div class="dc-panel">
+    <h3 style="margin-top:0; font-size:14px; border-bottom: 1px solid #eee; padding-bottom: 5px;">Status Codes</h3>
+    
+    <div class="dc-code-category">Conditions</div>
+    <div class="dc-code-grid">
+        <button type="button" class="dc-code-btn" onclick="setMode('text', '✔', this)"><span>✔</span> Present</button>
+        <button type="button" class="dc-code-btn" onclick="setMode('text', 'D', this)"><span>D</span> Decayed</button>
+        <button type="button" class="dc-code-btn" onclick="setMode('text', 'M', this)"><span>M</span> Missing</button>
+        <button type="button" class="dc-code-btn" onclick="setMode('text', 'MO', this)"><span>MO</span> Missing (Other)</button>
+        <button type="button" class="dc-code-btn" onclick="setMode('text', 'Im', this)"><span>Im</span> Impacted</button>
+        <button type="button" class="dc-code-btn" onclick="setMode('text', 'Sp', this)"><span>Sp</span> Supernumerary</button>
+        <button type="button" class="dc-code-btn" onclick="setMode('text', 'Rf', this)"><span>Rf</span> Root Frag</button>
+        <button type="button" class="dc-code-btn" onclick="setMode('text', 'Un', this)"><span>Un</span> Unerupted</button>
+    </div>
+
+    <div class="dc-code-category" style="margin-top:10px;">Restorations</div>
+    <div class="dc-code-grid">
+        <button type="button" class="dc-code-btn" onclick="setMode('text', 'Am', this)"><span>Am</span> Amalgam</button>
+        <button type="button" class="dc-code-btn" onclick="setMode('text', 'Co', this)"><span>Co</span> Composite</button>
+        <button type="button" class="dc-code-btn" onclick="setMode('text', 'JC', this)"><span>JC</span> Jacket Crown</button>
+        <button type="button" class="dc-code-btn" onclick="setMode('text', 'Ab', this)"><span>Ab</span> Abutment</button>
+        <button type="button" class="dc-code-btn" onclick="setMode('text', 'Att', this)"><span>Att</span> Attachment</button>
+        <button type="button" class="dc-code-btn" onclick="setMode('text', 'P', this)"><span>P</span> Pontic</button>
+        <button type="button" class="dc-code-btn" onclick="setMode('text', 'In', this)"><span>In</span> Inlay</button>
+        <button type="button" class="dc-code-btn" onclick="setMode('text', 'Imp', this)"><span>Imp</span> Implant</button>
+        <button type="button" class="dc-code-btn" onclick="setMode('text', 'S', this)"><span>S</span> Sealants</button>
+        <button type="button" class="dc-code-btn" onclick="setMode('text', 'Rm', this)"><span>Rm</span> Removable</button>
+    </div>
+
+    <div class="dc-code-category" style="margin-top:10px;">Surgery</div>
+    <div class="dc-code-grid">
+        <button type="button" class="dc-code-btn" onclick="setMode('text', 'X', this)"><span>X</span> Ext (Caries)</button>
+        <button type="button" class="dc-code-btn" onclick="setMode('text', 'XO', this)"><span>XO</span> Ext (Other)</button>
+    </div>
+    
+    <button type="button" class="dc-code-btn" style="width:100%; justify-content:center; color:red; margin-top:10px;" onclick="setMode('text', '', this)">Clear Selection</button>
+
+    <button type="button" class="dc-save-btn" onclick="saveData()">SAVE ALL DATA</button>
+</div>
+        </div>
+    </div>
+    {{!-- END: NEW DENTAL CHART --}}
+
     {{!-- Button for adding picture --}}
     <div class="button-container">
         <button class="open-upload-popup" id="open-upload-popup"> <img class="icon icon-add" src="/img/icon-add.svg" />Add Picture</button>
@@ -1103,3 +1226,11 @@
 
 <script src="/js/C_PatientInformation.js"></script>
 <script src="/js/C_PatientInfo_animation.js"></script>
+<script>
+        const savedDentalChart = {{{dentalChart}}};
+        const savedDentalExam = {{{dentalExam}}};
+    </script>
+
+    <script src="/js/dental_chart.js"></script>
+</body>
+</html>

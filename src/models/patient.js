@@ -112,6 +112,15 @@ const patientSchema = new mongoose.Schema({
 
     consentDate:{
         type: Date,
+    },
+
+    dentalChart: {
+        type: [Object], 
+        default: []
+    },
+    dentalExam: {
+        type: Object,  
+        default: {}
     }
 
     
