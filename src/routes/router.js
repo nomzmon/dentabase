@@ -202,222 +202,46 @@ router.post('/create-treatment', function(req, res){
 
 router.get("/report", async (req, res) => {
     try{
-        let orthodontics = await Ortho.aggregate([
-            { $match: { isActive: true } },  // Filter for active records
-            { $group: { 
-                _id: { patientID: "$patientID", service: "$service" },  // Group by patientID and service
-                doc: { $first: "$$ROOT" }  // Keep the first document in each group
-            }},
-            { $replaceRoot: { newRoot: "$doc" } }  // Replace the root with the document itself
-          ]);
+        let allServices = await Service.find()
+        let allAppointmentsData = await Treatment.find()
+        let allWalkIns = await NonPatient.find()
 
-        for(let ortho of orthodontics){
-            let patient = await Patient.findOne({id: ortho.patientID });
+        // Combine dates from both appointments and walk-ins
+        const allDates = [
+            ...allAppointmentsData.map(appt => appt.date),
+            ...allWalkIns.map(walkIn => walkIn.effectiveDate)
+        ];
 
-            ortho.patientName = patient.firstName +" " +patient.lastName;
-        }
+        const availableYears = [...new Set(allDates
+            .filter(d => d)
+            .map(d => new Date(d).getFullYear())
+        )];
 
-        const currentYear = new Date().getFullYear(); 
-        const startOfYear = new Date(currentYear, 0, 1); 
-        const startOfNextYear = new Date(currentYear + 1, 0, 1);
+        availableYears.sort((a, b) => b - a);
 
-        let monthlyAppointmentsCounts = [0,0,0,0,0,0,0,0,0,0,0,0];
-        
-        const treatmentsOfYear = await Treatment.find({
-            date: {
-                $gte: startOfYear, 
-                $lt: startOfNextYear
-            }
-        });
-
-        let yearlyUniqueProcedures = []; // array of jsons for unique procedures
-        let servicesByMonth = {};
-        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        
-        months.forEach(month => {
-            servicesByMonth[month + "Services"] = [];
-        });
-        
-        treatmentsOfYear.forEach(treatment => {
-            let month = treatment.date.getMonth(); // get the month number
-            let procedure = treatment.procedure;
-        
-            // Handle unique procedures for the year
-            const uniqueProcedure = yearlyUniqueProcedures.find(p => p.name === procedure);
-            if (uniqueProcedure) {
-                uniqueProcedure.count++; // increment if procedure already exists
-            } else {
-                yearlyUniqueProcedures.push({ name: procedure, count: 1 }); // create new procedure entry if not found
-            }
-
-
-            let procedureOfMonth;
-        
-            // Update monthly appointments count (e.g., total treatments for each month)
-            switch (month) {
-                case 0: // January
-                    monthlyAppointmentsCounts[0]++;
-                    
-                    // Check if procedure exists in January's services
-                    procedureOfMonth = servicesByMonth.JanServices.find(p => p.name === procedure);
-                    if (procedureOfMonth) {
-                        procedureOfMonth.count++;
-                    } else {
-                        servicesByMonth.JanServices.push({ name: procedure, count: 1 });
-                    }
-                    break;
-                
-                case 1: // February
-                    monthlyAppointmentsCounts[1]++;
-                    
-                    // Check if procedure exists in February's services
-                    procedureOfMonth = servicesByMonth.FebServices.find(p => p.name === procedure);
-                    if (procedureOfMonth) {
-                        procedureOfMonth.count++;
-                    } else {
-                        servicesByMonth.FebServices.push({ name: procedure, count: 1 });
-                    }
-                    break;
-        
-                case 2: // March
-                    monthlyAppointmentsCounts[2]++;
-                    
-                    // Check if procedure exists in March's services
-                    procedureOfMonth = servicesByMonth.MarServices.find(p => p.name === procedure);
-                    if (procedureOfMonth) {
-                        procedureOfMonth.count++;
-                    } else {
-                        servicesByMonth.MarServices.push({ name: procedure, count: 1 });
-                    }
-                    break;
-        
-                case 3: // April
-                    monthlyAppointmentsCounts[3]++;
-                    
-                    // Check if procedure exists in April's services
-                    procedureOfMonth = servicesByMonth.AprServices.find(p => p.name === procedure);
-                    if (procedureOfMonth) {
-                        procedureOfMonth.count++;
-                    } else {
-                        servicesByMonth.AprServices.push({ name: procedure, count: 1 });
-                    }
-                    break;
-        
-                case 4: // May
-                    monthlyAppointmentsCounts[4]++;
-                    
-                    // Check if procedure exists in May's services
-                    procedureOfMonth = servicesByMonth.MayServices.find(p => p.name === procedure);
-                    if (procedureOfMonth) {
-                        procedureOfMonth.count++;
-                    } else {
-                        servicesByMonth.MayServices.push({ name: procedure, count: 1 });
-                    }
-                    break;
-        
-                case 5: // June
-                    monthlyAppointmentsCounts[5]++;
-                    
-                    // Check if procedure exists in June's services
-                    procedureOfMonth = servicesByMonth.JunServices.find(p => p.name === procedure);
-                    if (procedureOfMonth) {
-                        procedureOfMonth.count++;
-                    } else {
-                        servicesByMonth.JunServices.push({ name: procedure, count: 1 });
-                    }
-                    break;
-        
-                case 6: // July
-                    monthlyAppointmentsCounts[6]++;
-                    
-                    // Check if procedure exists in July's services
-                    procedureOfMonth = servicesByMonth.JulServices.find(p => p.name === procedure);
-                    if (procedureOfMonth) {
-                        procedureOfMonth.count++;
-                    } else {
-                        servicesByMonth.JulServices.push({ name: procedure, count: 1 });
-                    }
-                    break;
-        
-                case 7: // August
-                    monthlyAppointmentsCounts[7]++;
-                    
-                    // Check if procedure exists in August's services
-                    procedureOfMonth = servicesByMonth.AugServices.find(p => p.name === procedure);
-                    if (procedureOfMonth) {
-                        procedureOfMonth.count++;
-                    } else {
-                        servicesByMonth.AugServices.push({ name: procedure, count: 1 });
-                    }
-                    break;
-        
-                case 8: // September
-                    monthlyAppointmentsCounts[8]++;
-                    
-                    // Check if procedure exists in September's services
-                    procedureOfMonth = servicesByMonth.SepServices.find(p => p.name === procedure);
-                    if (procedureOfMonth) {
-                        procedureOfMonth.count++;
-                    } else {
-                        servicesByMonth.SepServices.push({ name: procedure, count: 1 });
-                    }
-                    break;
-        
-                case 9: // October
-                    monthlyAppointmentsCounts[9]++;
-                    
-                    // Check if procedure exists in October's services
-                    procedureOfMonth = servicesByMonth.OctServices.find(p => p.name === procedure);
-                    if (procedureOfMonth) {
-                        procedureOfMonth.count++;
-                    } else {
-                        servicesByMonth.OctServices.push({ name: procedure, count: 1 });
-                    }
-                    break;
-        
-                case 10: // November
-                    monthlyAppointmentsCounts[10]++;
-                    
-                    // Check if procedure exists in November's services
-                    procedureOfMonth = servicesByMonth.NovServices.find(p => p.name === procedure);
-                    if (procedureOfMonth) {
-                        procedureOfMonth.count++;
-                    } else {
-                        servicesByMonth.NovServices.push({ name: procedure, count: 1 });
-                    }
-                    break;
-        
-                case 11: // December
-                    monthlyAppointmentsCounts[11]++;
-                    
-                    // Check if procedure exists in December's services
-                    procedureOfMonth = servicesByMonth.DecServices.find(p => p.name === procedure);
-                    if (procedureOfMonth) {
-                        procedureOfMonth.count++;
-                    } else {
-                        servicesByMonth.DecServices.push({ name: procedure, count: 1 });
-                    }
-                    break;
-        
-                default:
-                    console.log("Invalid month"); // Fallback for invalid months
-            }
-        });
-        
-        let allServices = await Service.find();
-
+        const months = [
+            {value: 0, month: 'Jan'},
+            {value: 1, month: 'Feb'},
+            {value: 2, month: 'Mar'},
+            {value: 3, month: 'Apr'},
+            {value: 4, month: 'May'},
+            {value: 5, month: 'Jun'},
+            {value: 6, month: 'Jul'},
+            {value: 7, month: 'Aug'},
+            {value: 8, month: 'Sep'},
+            {value: 9, month: 'Oct'},
+            {value: 10, month: 'Nov'},
+            {value: 11, month: 'Dec'}
+            ]
         res.render("E_Report", {
-            patients: orthodontics,
-            orthoCount: orthodontics.length,
-            monthlyCounts: monthlyAppointmentsCounts,
-            appointmentCount: treatmentsOfYear.length,
-
-
-            //for frequency distribution
-            yearlyUniqueProcedures: yearlyUniqueProcedures,
-            servicesByMonth: servicesByMonth,
-            allServices: allServices
-
+            // Send all appointments
+            allAppointmentsData: allAppointmentsData,
+            // Non-patients
+            allWalkIns: allWalkIns,
+            // For Filter
+            allServices: allServices,
+            availableYears: availableYears,
+            months: months,
         });
 
 
@@ -973,55 +797,63 @@ router.get("/", async (req, res) => {
 });
 
 router.post('/update-effective-date', async (req, res) => {
-    const { id, effectiveDate, startTime, service} = req.body; // `id` is passed here
+    const { id, effectiveDate, startTime, endTime, service } = req.body;
 
     try {
-        //combine date and time
-        const updatedEffectiveDate = new Date(`${effectiveDate}T${startTime}`);
-    
+        if (!id || !effectiveDate || !startTime || !endTime || !service) {
+            return res.status(400).json({ message: 'Missing required fields' });
+        }
 
-        // find the patient by their `id` and update `effectiveDate`
-        const patient = await Patient.findOne({ id }); // Match the `id` field in MongoDB
+        const startDateTime = new Date(`${effectiveDate}T${startTime}`);
+        const endDateTime = new Date(`${effectiveDate}T${endTime}`);
+
+        const patient = await Patient.findOne({ id });
         if (!patient) {
             return res.status(404).json({ message: 'Patient not found' });
         }
 
-        patient.effectiveDate = updatedEffectiveDate; // update the effective date
+        patient.effectiveDate = startDateTime;
+
         const newTreatment = new Treatment({
-            id: new Date().getTime(), 
-            date: updatedEffectiveDate,
+            id: new Date().getTime(),
+            date: startDateTime,
+            startTime: startDateTime,
+            endTime: endDateTime,
             procedure: service,
             patientID: patient.id,
             status: 'ongoing',
         });
+
         await newTreatment.save();
         patient.treatments.push(newTreatment._id);
+        await patient.save();
 
-        await patient.save(); //save changes to the database
-        res.status(200).json({ message: 'Added to To-Do', effectiveDate: updatedEffectiveDate });
+        res.status(200).json({ message: 'Added to To-Do', startTime: startDateTime, endTime: endDateTime });
     } catch (error) {
         console.error('Error updating effective date:', error);
         res.status(500).json({ message: 'Error updating effective date' });
     }
 });
 
+
 router.post('/non-patient-appointment', async (req, res) => {
     try {
-        const { name, email, contact, effectiveDate, startTime, service } = req.body;
+        const { name, email, contact, effectiveDate, startTime, endTime, service } = req.body;
 
-        //validate required fields
-        if (!name || !email || !contact || !effectiveDate || !startTime || !service) {
+        if (!name || !email || !contact || !effectiveDate || !startTime || !endTime || !service) {
             return res.status(400).json({ message: 'All fields are required for a non-patient appointment.' });
         }
 
-        //create the appointment
         const appointmentStart = new Date(`${effectiveDate}T${startTime}`);
+        const appointmentEnd = new Date(`${effectiveDate}T${endTime}`);
+
         const nonPatientAppointment = new NonPatient({
             name,
             contact,
             email,
             effectiveDate: appointmentStart,
             startTime: appointmentStart,
+            endTime: appointmentEnd,
             service
         });
 
@@ -1033,6 +865,7 @@ router.post('/non-patient-appointment', async (req, res) => {
         return res.status(500).json({ message: 'Internal server error.' });
     }
 });
+
 
 router.get('/api/unique-services', Functions.isAuthenticated, async (req, res) => {
     try {

@@ -1,0 +1,16 @@
+[
+  {
+    "_id": "68ef968ad45d1b249990aa37",
+    "service": "test",
+    "__v": 0,
+    "price": 100,
+    "type": "Ortho"
+  },
+  {
+    "_id": "68f774f79aecac623a88c1f4",
+    "service": "dsds",
+    "__v": 0,
+    "price": 22,
+    "type": "Non-Ortho"
+  }
+]

@@ -1,0 +1,42 @@
+[
+  {
+    "_id": "68c2d17f3fc0d43bb22a97a2",
+    "name": "Jorenie",
+    "email": "jo@gmail.com",
+    "contact": 9121429012,
+    "effectiveDate": "2025-09-12T13:45:00.000Z",
+    "startTime": "2025-09-12T13:45:00.000Z",
+    "service": "Service",
+    "__v": 0
+  },
+  {
+    "_id": "68ef98184735187e6a2eac64",
+    "name": "t",
+    "email": "a",
+    "contact": 1,
+    "effectiveDate": "2025-10-15T17:00:00.000Z",
+    "startTime": "2025-10-15T17:00:00.000Z",
+    "service": "Service",
+    "__v": 0
+  },
+  {
+    "_id": "68ef98264735187e6a2eac72",
+    "name": "t",
+    "email": "a@gmail.com",
+    "contact": 1,
+    "effectiveDate": "2025-10-15T17:00:00.000Z",
+    "startTime": "2025-10-15T17:00:00.000Z",
+    "service": "test",
+    "__v": 0
+  },
+  {
+    "_id": "68efe70615057076ee1cab2c",
+    "name": "aabbbb",
+    "email": "aa",
+    "contact": 11,
+    "effectiveDate": "2025-10-16T17:01:00.000Z",
+    "startTime": "2025-10-16T17:01:00.000Z",
+    "service": "Service",
+    "__v": 0
+  }
+]
