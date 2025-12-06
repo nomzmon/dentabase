@@ -14,6 +14,43 @@ function getTimestamp() {
   return `backup_${mm}${dd}${yyyy}_${hh}${min}${ss}`;
 }
 
+function reviveTypes(obj) {
+  for (const key in obj) {
+    const value = obj[key];
+
+    if (
+      (key === "_id" || key.endsWith("Id")) &&
+      typeof value === "string" &&
+      ObjectId.isValid(value)
+    ) {
+      obj[key] = new ObjectId(value);
+      continue;
+    }
+
+    if (
+      typeof value === "string" &&
+      /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z/.test(value)
+    ) {
+      obj[key] = new Date(value);
+      continue;
+    }
+
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      reviveTypes(value);
+    }
+
+    if (Array.isArray(value)) {
+      obj[key] = value.map(item => {
+        if (typeof item === "object") reviveTypes(item);
+        return item;
+      });
+    }
+  }
+
+  return obj;
+}
+
+
 async function saveBackup(baseDir) {
   const timestamp = getTimestamp();
   const backupDir = path.join(baseDir, timestamp);
@@ -55,7 +92,12 @@ async function loadBackup(baseDir) {
     if (path.extname(file) !== '.json') continue;
 
     const collectionName = path.basename(file, '.json');
-    const newData = await fs.readJson(path.join(backupDir, file));
+
+    let newData = await fs.readJson(path.join(backupDir, file));
+
+
+    newData = newData.map(doc => reviveTypes(doc));
+
     const collection = mongoose.connection.db.collection(collectionName);
     const existingData = await collection.find().toArray();
 
