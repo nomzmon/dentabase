@@ -1,567 +1,47 @@
-// this file is essentially the api routes. 
+// this file is essentially the api routes.
 
 // will be most used libraries
 const express = require('express');
 const Router = require('express');
-const mongoose = require('mongoose');
 // other libraries to be added based on necessity / user stories.
-const session = require('express-session');
-const bcrypt = require('bcrypt');
 // mongoose models, add based on user stories
 
 const Patient = require('../models/patient');
-const Ortho = require('../models/orthodontics.js');
 const Treatment = require('../models/treatment');
 const Service = require('../models/service.js');
-const Account = require('../models/accounts');
-const Picture = require('../models/pictures')
-const MedicalHistory = require('../models/medicalHistory');
-const { TopologyDescription } = require('mongodb');
-const sampleTreatments = require('../scripts/sampleData/treatmentData');
 const NonPatient = require('../models/nonpatient.js');
 
-
-const Functions = require('../scripts/functions');
+const sampleTreatments = require('../scripts/sampleData/treatmentData');
 
 const router = Router();
-router.use(express.json());
 
+router.use(express.json());
 router.use(express.urlencoded({ extended: true }));
 
 const app = express();
 app.use(express.static('public'));
 
-//file transfers
-const path = require('path');
-const multer = require('multer');
+router.use("/", require('./auth'));
+router.use("/", require('./backup'));
+router.use("/", require('./ortho'));
+router.use("/", require('./patient'));
+router.use("/", require('./report'));
+router.use("/", require('./services'));
+router.use("/", require('./treatment'));
+router.use("/", require('./upload'));
 
-//backup
-const { saveBackup, loadBackup } = require('../scripts/backup.js');
-
-// function copyFile(src){
-//     let destDir = path.join(__dirname, '../../public/patientPic');
-//     let fileName = path.basename(src);
-
-//     let dest = path.join(destDir, fileName);
-
-//     fs.copyFile(src, dest, (err) => {
-//         if (err) {
-//             console.error("Error copying file:", err);
-//         } else {
-//             console.log("File copied from ${src} to ${dest}");
-//         }
-//     });
-// }
-
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, path.join(__dirname, '../../public/patientPic'));
-    },
-    filename: (req, file, cb) => {
-        cb(null, file.originalname);
-    },
-});
-
-const upload = multer({ storage });
 app.use(express.urlencoded({ extended: true }));
 
-//upload picture
-router.post('/upload-pic', upload.single('file'), (req,res) => {
-    try{
-        const fileName = req.file.originalname;
-        const fileDate = req.body.date;
-        const fileCaption = req.body.caption;
-        const patientID = req.body.patientID;
-
-        const picture = new Picture({
-            fileName: fileName,
-            date: fileDate,
-            caption: fileCaption,
-            patientID: patientID
-        });
-
-        
-        picture.save().then(function(){
-            if (req.file){
-                return res.json({message: 'File uploaded successfully', file: req.file});
-            } else {
-                return res.status(400).json({ message: 'File upload failed.' });
-            }
-        });
-
-        
-    } catch(error){
-        console.error("Error uploading picture:", error);
-        res.status(500).send("Server error");
-    }
-
-    
-});
-
-router.post('/deactivate-ortho', async function(req, res){
-    try{
-        let orthos = req.body.orthos;
-
-        await Promise.all(orthos.map(ortho => {
-            let firstPart;
-            let secondPart;
-            const spaceIndex = ortho.indexOf(' ');
-
-            if (spaceIndex === -1) {
-               firstPart = ortho;
-            }
-            firstPart = ortho.substring(0, spaceIndex);
-            secondPart = ortho.substring(spaceIndex + 1);
-
-
-
-            return Functions.setOrthoInactive(firstPart, secondPart);
-        }));
-
-        let count = await Ortho.countDocuments({isActive: true});
-
-        return res.status(200).json({message: "Orthodontic patients successfully marked as finished.", count: count});
-
-    } catch(error){
-        console.error("Error deactivating orthodontics.", error);
-        return res.status(500).json({message: "Error deactivating orthodontic patients", count: -1});
-    }
-});
-
-router.post('/create-patient', function(req, res){
-    try{
-        Functions.createPatient(
-            req.body.firstName,
-            req.body.lastName,
-            req.body.middleName,
-            req.body.nickname,
-            req.body.address,
-            new Date(req.body.birthdate),
-            req.body.age,
-            req.body.sex,
-            req.body.religion,
-            req.body.nationality,
-            req.body.email,
-            req.body.homeNo,
-            req.body.occupation,
-            req.body.dentalInsurance,
-            req.body.officeNo,
-            req.body.faxNo,
-            req.body.cellNo,
-            req.body.birthdate ? new Date(req.body.birthdate) : null, //temporary for effectiveDate
-            req.body.guardianName,
-            req.body.guardianOccupation,
-            req.body.referral,
-            req.body.consultationReason,
-            req.body.previousDentist,
-            req.body.lastVisit ? new Date(req.body.lastVisit) : null,
-            "random pic" //placeholder for not sure pic
-        ).then(function(patientID){
-            console.log('Patient record created successfully with ID: ' + patientID);
-            return res.status(200).json({message: "Patient record created successfully.", patientID: patientID});
-        });
-
-    } catch(error){
-        console.error("Error creating patient record.", error);
-        res.status(500).send("Server error");
-    }
-});
-
-router.post('/create-treatment', function(req, res){
-    try{
-        let patientID = req.body.patientID;
-        let procedureDate = req.body.procedureDate;
-        let procedureName = req.body.procedureName;
-        let dentistName = req.body.dentistName;
-        let amountCharged = req.body.amountCharged;
-        let amountPaid = req.body.amountPaid;
-        let teethAffected = req.body.teethAffected;
-
-        Functions.createTreatment(
-            patientID,
-            procedureDate,
-            teethAffected,
-            procedureName,
-            dentistName,
-            amountCharged,
-            amountPaid,
-            5000, //change balance
-            'ongoing'
-        ).then(function(treatmentID){
-            console.log("Treatment ID: " + treatmentID);
-            console.log('Treatment record created successfully.');
-            return res.status(200).send({id: treatmentID});
-        })
-    } catch(error){
-        console.error("Error creating treatment record.", error);
-        res.status(500).send("Server error");
-    }
-});
-
-
-
-router.get("/report", async (req, res) => {
-    try{
-        let allServices = await Service.find()
-        let allAppointmentsData = await Treatment.find()
-        let allWalkIns = await NonPatient.find()
-
-        // Combine dates from both appointments and walk-ins
-        const allDates = [
-            ...allAppointmentsData.map(appt => appt.date),
-            ...allWalkIns.map(walkIn => walkIn.effectiveDate)
-        ];
-
-        const availableYears = [...new Set(allDates
-            .filter(d => d)
-            .map(d => new Date(d).getFullYear())
-        )];
-
-        availableYears.sort((a, b) => b - a);
-
-        const months = [
-            {value: 0, month: 'Jan'},
-            {value: 1, month: 'Feb'},
-            {value: 2, month: 'Mar'},
-            {value: 3, month: 'Apr'},
-            {value: 4, month: 'May'},
-            {value: 5, month: 'Jun'},
-            {value: 6, month: 'Jul'},
-            {value: 7, month: 'Aug'},
-            {value: 8, month: 'Sep'},
-            {value: 9, month: 'Oct'},
-            {value: 10, month: 'Nov'},
-            {value: 11, month: 'Dec'}
-            ]
-        res.render("E_Report", {
-            // Send all appointments
-            allAppointmentsData: allAppointmentsData,
-            // Non-patients
-            allWalkIns: allWalkIns,
-            // For Filter
-            allServices: allServices,
-            availableYears: availableYears,
-            months: months,
-        });
-
-
-    } catch (error) {
-        console.error("Error loading report page.", error);
-    }
-});
-
-///SERVICE -Information
-
-router.post('/edit-footnote', async function(req, res){
-    try{
-        let patient = await Patient.findOne({id: req.body.patientID});
-
-        patient.footnote = req.body.footnote;
-
-        await patient.save();
-
-        res.status(200).json({state: true, message: "Successfully updated footnote."});
-    } catch(error){
-        res.status(400).json({state: false, message: "Error editing footnote."});
-    }
-})
-
-
-router.post('/deactivate-patient', async(req, res) =>{
-    try{
-        const isActive = await Functions.deactivatePatient(req.body.patientID);
-        res.status(200).json({state: isActive});
-    } catch(error){
-        res.status(400).json({state: null});
-    }
-});
-
-router.post('/services', async (req, res) => {
-    const { serviceName, price, type } = req.body;
-
-    try {
-        const result = await Service.findOneAndUpdate(
-            { service: serviceName },
-            { $setOnInsert: { service: serviceName, price, type } },
-            { upsert: true, new: true }
-        );
-
-        if (result.service === serviceName) {
-            res.json(result);
-        } else {
-            res.status(400).json({ message: 'Service creation failed' });
-        }
-    } catch (error) {
-        console.error('Error creating service:', error);
-        res.status(500).json({ message: 'Server error' });
-    }
-});
-
-router.get('/services/:id', async (req, res) => {
-    const { id } = req.params;
-    try {
-        const service = await Functions.readService(id);
-        res.status(200).json(service);
-    } catch (error) {
-        res.status(404).json({ message: error.message });
-    }
-});
-
-router.put('/services/update-multiple', async (req, res) => {
-    const { updates } = req.body;
-
-    try {
-        const results = await Functions.updateMultipleServices(updates);
-        res.status(200).json({ message: 'Services updated successfully', results });
-    } catch (error) {
-        console.error('Error updating services:', error);
-        res.status(500).json({ message: 'Failed to update services' });
-    }
-});
-
-
-router.post("/update-treatments", async(req, res) => {
-    try{
-        const promises = req.body.treatments.map(async(instance) => {
-            const treatment = await Treatment.findOne({ id: instance.id });  
-
-            treatment.date = instance.date;
-            treatment.teethAffected = instance.teethAffected;
-            treatment.procedure = instance.procedure;
-            treatment.amountCharged = instance.amountCharged;
-            treatment.amountPaid = instance.amountPaid;
-        
-        
-            await treatment.save();
-        });
-
-        await Promise.all(promises);
-
-        res.status(200).json({message: "Treatments updated successfully."});
-    } catch(error) {
-        res.status(400).json({message: "Error updating treatment."});
-    }
-});
-
-router.post("/fill-consent", async(req, res) => {
-    try{
-        const patient = await Patient.findOne({id: req.body.patientID});
-
-        patient.consentName = req.body.consentName;
-        patient.consentDate = new Date(req.body.consentDate);
-
-        await patient.save();
-
-        res.status(200).json({message: "Consent form filled successfully."});
-    } catch(error){
-        res.status(400).json({message: "Error filling up consent form."});
-    }
-});
-
-//PATIENT-INFORMATION
-router.get("/patient-information/:id", async (req, res) => {
-    try {
-        const patient = await Patient.findOne({id: req.params.id}).populate('treatments'); //unique id after the thing
-        const fullName = `${patient.firstName} ${patient.middleName} ${patient.lastName}`;
-        
-        let birthdate = patient.birthdate;
-        const birthyear = birthdate.getFullYear();
-        let birthmonth = birthdate.getMonth() + 1;
-
-        if(birthmonth < 10){
-            birthmonth = "0" + birthmonth;
-        }
-
-        let birthday = birthdate.getDate();
-        
-        if(birthday < 10){
-            birthday = "0" + birthday;
-        }
-
-
-        birthdate = birthyear + '-' + birthmonth + '-' + birthday; 
-
-        let fullSex = patient.sex;
-
-        if(fullSex == "M"){
-            fullSex = "Male";
-        } else {
-            fullSex = "Female";
-        }
-
-        const medicalHistory = await MedicalHistory.findOne({patientID: req.params.id});
-
-        if(medicalHistory){
-            console.log('Medical history found.');
-        } else {
-            console.log('Medical history not found.');
-        }
-
-        const patientTreatments = patient.treatments;
-        
-        patientTreatments.forEach(treatment => {
-            treatment.teethAffected = treatment.teethAffected.join(', ');
-            treatment.dateString = Functions.convertToDate(treatment.date);
-        })
-
-        const pictures = await Picture.find({patientID: req.params.id});
-
-        pictures.forEach(picture => {
-            picture.dateString = Functions.convertToDate(picture.date);
-        })
-
-        const services = await Service.find();
-
-        let hasPictures = true;
-
-        if(pictures.length == 0){
-            hasPictures = false;
-        }
-
-        let hasTreatments = true;
-
-        if(patientTreatments.length == 0){
-            hasTreatments = false;
-        }
-
-
-        res.render("C_PatientInformation", {
-            hasPictures: hasPictures,
-            hasTreatments: hasTreatments,
-
-
-            id: patient.id,
-            title: fullName.trim(),
-            full_name: fullName,
-            age: patient.age,
-            sex: patient.sex,
-            birthdate: birthdate,
-            nickname: patient.nickname,
-            fullSex: fullSex,
-            home_address: patient.homeAddress,
-            occupation: patient.occupation,
-            religion: patient.religion, 
-            nationality: patient.nationality,
-            dental_insurance: patient.dentalInsurance,
-            previous_dentist: patient.lastDentist,
-            lastDentalVisit: Functions.convertToDate(patient.lastDentalVisit),
-            email: patient.email,
-            home_number: patient.homeNo,
-            mobile_number: patient.contact,
-            office_number: patient.officeNo,
-            fax_number: patient.faxNo,
-            guardian_name: patient.guardianName,
-            guardian_occupation: patient.guardianOccupation,
-            minor_referral_question: patient.referralName,
-            consultation: patient.consultationReason,
-            footnote: patient.footnote,
-
-            isActive: patient.isActive,
-
-
-            //medicalHistory
-            physician_name: medicalHistory ? medicalHistory.physicianName : "N/A",
-            physicianOfficeAddress: medicalHistory ? medicalHistory.physicianOfficeAddress : "N/A",
-            physicianSpecialty: medicalHistory ? medicalHistory.physicianSpecialty : "N/A",
-            physicianOfficeNumber: medicalHistory ? medicalHistory.physicianOfficeNumber : "N/A",
-            prescription: medicalHistory ? medicalHistory.prescription : "N/A",
-            illnessOrSurgery: medicalHistory ? medicalHistory.illnessOrSurgery : "N/A",
-            condition: medicalHistory ? medicalHistory.condition : "N/A",
-            isUsingTobacco: medicalHistory ? medicalHistory.isUsingTobacco : "N/A",
-            isAlcoholOrDrugs: medicalHistory ? medicalHistory.isAlcoholOrDrugs : "N/A",
-            allergies: medicalHistory ? medicalHistory.allergies : "N/A",
-            isPregnant: medicalHistory ? medicalHistory.isPregnant : "N/A",
-            isNursing: medicalHistory ? medicalHistory.isNursing : "N/A",
-            isBirthControlPills: medicalHistory ? medicalHistory.isBirthControlPills : "N/A",
-            healthProblems: medicalHistory ? medicalHistory.healthProblems : "N/A",
-
-            //dentalChart
-            dentalChart: JSON.stringify(patient.dentalChart || []),
-            dentalExam: JSON.stringify(patient.dentalExam || {}),
-
-            //treatments
-            treatments: patientTreatments,
-            treatmentsSize: patientTreatments.length,
-
-            //pictures
-            pictures : pictures,
-
-            //services
-            services: services,
-
-            //informed consent
-            consentName: patient.consentName,
-            consentDate: Functions.convertToDate(patient.consentDate)
-        });
-    } catch (error) {
-        console.error("Error fetching patient information:", error);
-        res.status(500).send("Server error");
-    }
-});
-
-router.post("/update-patient", async function(req, resp){
-try{
-    let patientSex;
-    if(req.body.sex == "Male"){
-        patientSex = 'M';
-    } else {
-        patientSex = 'F';
-    }
-
-    console.log(patientSex);
-
-    await Functions.updatePatientInfo(
-            req.body.patientID,
-            req.body.nickname,
-            req.body.address,
-            new Date(req.body.birthdate),
-            req.body.age,
-            patientSex,
-            req.body.religion,
-            req.body.nationality,
-            req.body.email,
-            req.body.homeNo,
-            req.body.occupation,
-            req.body.dentalInsurance,
-            req.body.officeNo,
-            req.body.faxNo,
-            req.body.mobileNo,
-            req.body.guardianName,
-            req.body.guardianOccupation,
-            req.body.referral,
-            req.body.consultationReason,
-            req.body.lastDentist,
-            req.body.lastDentalVisit ? new Date(req.body.lastDentalVisit) : null,
-        );
-        resp.status(200).send('Patient information updated successfully');
-} catch(error){
-    console.error("Error updating patient info.", error);
-}
-    
-});
-
-router.get("/deactivate-patient", (req, res) => {
-    try{
-        Functions.deactivatePatient(req.body.patientID).then(function(){
-            return res.status(200).json({message: "Patient deactivated successfully."});
-        });
-    } catch (error) {
-        console.error("Error deactivating patient.", error);
-        return res.status(400).json({message: 'Error deactivating patient.'});
-    }
-})
-
-
-
+// SERVICE - Information
 router.get("/to-do", async (req, res) => {
-    
+
     const isAuthenticated = !!req.session.isAuthenticated;
 
     if (!req.session.isAuthenticated) {
         return res.redirect('/login'); //redirect to login if not authenticated
     }
-    
-    try {   
+
+    try {
         const services = await Service.find({});
         const page = parseInt(req.query.page) || 0;
 
@@ -650,149 +130,11 @@ router.post("/remove-effective-dates", async (req, res) => {
         await Patient.updateMany(
             { id: { $in: patientIDs } },
             { $unset: { effectiveDate: "" } }
-        );      
+        );
         res.status(200).send({ success: true, message: "Patients successfully removed from the To-Do list." });
     } catch (error) {
         console.error("Error removing effectiveDates:", error);
         res.status(500).send({ success: false, message: "Failed to update patient data." });
-    }
-});
-
-router.get("/services",async (req,res) =>{
-    const isAuthenticated = !!req.session.isAuthenticated;
-    try{
-        let services = await Service.find();
-        res.render("D_Services",{
-            services: services,
-            serviceCount: services.length, isAuthenticated
-        });
-
-    } catch (error){
-        console.error("Error loading services page.", error);
-    }
-    
-});
-
-router.get("/patient_list", async (req, res) => {
-    const isAuthenticated = !!req.session.isAuthenticated;
-    try {
-        const searchQuery = req.query.search || "";
-        const page = parseInt(req.query.page) || 1; 
-        const limit = 10; 
-        const skip = (page - 1) * limit; 
-
-        const services = await Service.find();
-
-        // Query to find patients
-        const patients = await Patient.find({ 
-            isActive: true,
-            $or: [
-                { firstName: { $regex: searchQuery, $options: 'i' } },
-                { lastName: { $regex: searchQuery, $options: 'i' } },
-                { middleName: { $regex: searchQuery, $options: 'i' } },
-                { nickname: { $regex: searchQuery, $options: 'i' } }
-            ]
-        })
-        .skip(skip)
-        .limit(limit);
-
-        const totalPatients = await Patient.countDocuments({
-            isActive: true,
-            $or: [
-                { firstName: { $regex: searchQuery, $options: 'i' } },
-                { lastName: { $regex: searchQuery, $options: 'i' } },
-                { middleName: { $regex: searchQuery, $options: 'i' } },
-                { nickname: { $regex: searchQuery, $options: 'i' } }
-            ]
-        });
-
-        const updatedPatients = await Promise.all(patients.map(async (patient) => {
-            const populatedPatient = await patient.populate({
-                path: "treatments",
-                options: { sort: { date: -1 }, limit: 1 }
-            });
-
-            if (populatedPatient.treatments.length > 0) {
-                const latestTreatment = populatedPatient.treatments[0];
-                const latestDate = Functions.convertToDate(latestTreatment.date); 
-                const latestProcedure = latestTreatment.procedure;
-
-                populatedPatient.latestTreatmentDate = latestDate;
-                populatedPatient.latestProcedure = latestProcedure;
-            } else {
-                populatedPatient.latestTreatmentDate = "N/A";
-                populatedPatient.latestProcedure = "N/A";
-            }
-
-            return populatedPatient;
-        }));
-
-        const totalPages = Math.ceil(totalPatients / limit);
-
-        res.render("C_PatientList", {
-            patients: updatedPatients,
-            patientCount: totalPatients,
-            currentPage: page,
-            totalPages: totalPages,
-
-            services: services,
-            isAuthenticated
-        });
-    } catch (error) {
-        console.log("Error getting data", error);
-        res.status(500).end("Error retrieving patient data");
-    }
-});
-
-router.get("/", async (req, res) => {
-    try {
-        const page = parseInt(req.query.page) || 0; // Default to page 0 if no page is provided
-        console.log("Page parameter received:", page);
-
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); // Start of the current day
-
-        // Calculate target date by adding/subtracting days based on the page number
-        const targetDate = new Date(today);
-        targetDate.setDate(today.getDate() + page); // Offset by the page number
-        console.log("Target date for page:", targetDate);
-
-        // Fetch patients for the specific target date
-        const patients = await Patient.find({
-            isActive: true,
-            effectiveDate: {
-                $gte: targetDate,
-                $lt: new Date(targetDate.getTime() + 24 * 60 * 60 * 1000) // End of the day
-            }
-        }).populate({
-            path: "treatments",
-            select: "procedure"
-        });
-
-        console.log("Number of patients found for target date:", patients.length);
-
-        // Format times for display
-        patients.forEach(patient => {
-            if (patient.effectiveDate) {
-                const date = new Date(patient.effectiveDate);
-                const hours = String(date.getHours()).padStart(2, '0');
-                const minutes = String(date.getMinutes()).padStart(2, '0');
-                patient.formattedTime = `${hours}:${minutes}`;
-            } else {
-                patient.formattedTime = "N/A";
-            }
-        });
-
-        // Render the page with the filtered patients and target date
-        res.render("B_Todo", {
-            patients,
-            appointmentCount: patients.length,
-            dateDisplay: targetDate.toDateString(), // Displayed date
-            page // Pass the current page number
-        });
-    } catch (error) {
-        console.log("Error getting data:", error);
-        res.status(500).end("Error retrieving patient data");
     }
 });
 
@@ -835,7 +177,6 @@ router.post('/update-effective-date', async (req, res) => {
     }
 });
 
-
 router.post('/non-patient-appointment', async (req, res) => {
     try {
         const { name, email, contact, effectiveDate, startTime, endTime, service } = req.body;
@@ -866,138 +207,11 @@ router.post('/non-patient-appointment', async (req, res) => {
     }
 });
 
-
-router.get('/api/unique-services', Functions.isAuthenticated, async (req, res) => {
-    try {
-        const services = await Service.distinct('service');
-        res.json(services);
-    } catch (error) {
-        console.error("Error fetching unique services:", error);
-        res.status(500).send('Error fetching unique services');
-    }
-});
-
-router.get('/api/patients-by-service', Functions.isAuthenticated, async (req, res) => {
-    try {
-        const { service, sortOrder, statusSort } = req.query;
-
-        let patients = await Patient.find().populate('treatments').exec();
-
-        // filter patients by service if specified
-        if (service && service !== 'All') {
-            patients = patients.filter(patient => {
-                if (patient.treatments.length > 0) {
-                    const latestTreatment = patient.treatments.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
-                    return latestTreatment.procedure === service;
-                }
-                return false;
-            });
-        }
-
-        //filter patients by status
-        if (statusSort) {
-            const isActiveFilter = statusSort === 'true';  
-            patients = patients.filter(patient => patient.isActive === isActiveFilter);
-        }
-
-        // sort patients by name if specified
-        if (sortOrder === 'A-Z') {
-            patients.sort((a, b) => a.firstName.localeCompare(b.firstName));
-        } else if (sortOrder === 'Z-A') {
-            patients.sort((a, b) => b.firstName.localeCompare(a.firstName));
-        }
-
-        // format the patient data for response
-        const formattedPatients = patients.map(patient => ({
-            id: patient.id,
-            name: `${patient.firstName} ${patient.lastName}`,
-            phone: patient.contact || 'N/A',
-            email: patient.email || 'N/A',
-            address: patient.homeAddress || 'N/A',
-            lastVisit: patient.treatments.length > 0
-                ? new Date(Math.max(...patient.treatments.map(t => new Date(t.date)))).toISOString()
-                : 'N/A',
-            lastProcedure: patient.treatments.length > 0
-                ? patient.treatments.sort((a, b) => new Date(b.date) - new Date(a.date))[0].procedure
-                : 'N/A',
-            isActive: patient.isActive,
-        }));
-
-        res.json({ message: "Patients fetched successfully", patients: formattedPatients });
-    } catch (error) {
-        console.error("Error fetching patients:", error);
-        res.status(500).send('Error fetching patients');
-    }
-});
-
-router.get('/patient/:id', Functions.isAuthenticated, async (req, res) => {
-    
-    try {
-        const patientId = req.params.id;
-        const id = Number(patientId); 
-        
-        const patient = await Patient.findOne({ id }).populate('treatments').exec();
-
-        if (!patient) {
-            return res.status(404).send("Patient not found");
-        }
-
-        const formattedPatient = {
-            name: `${patient.firstName} ${patient.lastName}`,
-            phone: patient.contact || 'N/A',
-            email: patient.email || 'N/A',
-            address: patient.homeAddress || 'N/A',
-            treatments: patient.treatments.map(treatment => ({
-                procedure: treatment.procedure,
-                date: new Date(treatment.date).toISOString()
-            })),
-            isActive: patient.isActive,
-        };
-
-        res.json({ message: "Patient information fetched successfully", patient: formattedPatient });
-    } catch (error) {
-        console.error("Error fetching patient information:", error);
-        res.status(500).send('Error fetching patient information');
-    }
-});
-
-router.post("/update-medical-history", async function(req, res){
-    try{
-
-        await Functions.updateMedicalHistory(
-            req.body.patientID,
-            req.body.physicianName,
-            req.body.physicianOfficeAddress,
-            req.body.physicianSpecialty,
-
-            req.body.physicianOfficeNumber,
-            
-            req.body.prescription,
-            req.body.illnessOrSurgery,
-            req.body.medicalTreatment,
-            req.body.isTobacco,
-            req.body.isAlcohol,
-            req.body.allergies,
-
-            req.body.isPregnant,
-            req.body.isNursing,
-            req.body.isBirthControl,
-
-            req.body.healthProblems
-        )
-
-        res.status(200).send('Updating medical history successful');
-    } catch(error){
-        console.error("Error updating medical history. ", error);
-        res.status(500).send('Error updating medical history');
-    }
-});
-
 router.post("/appointments", async (req, res) => {
     try {
         const { patientID, date, startTime, endTime, procedure, dentist } = req.body;
 
-        // combine start and end 
+        // combine start and end
         const appointmentDate = new Date(date);
         const startDateTime = new Date(appointmentDate.setHours(...startTime.split(':')));
         const endDateTime = new Date(appointmentDate.setHours(...endTime.split(':')));
@@ -1012,81 +226,11 @@ router.post("/appointments", async (req, res) => {
     }
 });
 
-
-router.get("/report", (req,res) =>{
-    const isAuthenticated = !!req.session.isAuthenticated;
-    res.render("E_Report", {isAuthenticated});
-});
-
-
-router.get('/login', (req, res) => {
-    const isAuthenticated = !!req.session.isAuthenticated;
-    if (req.session.isAuthenticated) {
-        return res.redirect('/to-do');
-    }
-    res.render('A_LoginPage', { isAuthenticated });
-});
-
-router.post('/login', async (req, res) => {
-    const { password } = req.body;
-
-    try {
-        const sharedHash = process.env.SHARED_PASSWORD_HASH;
-
-        const isMatch = await bcrypt.compare(password, sharedHash);
-        console.log(isMatch);
-        if (isMatch) {
-            req.session.isAuthenticated = true;
-            res.redirect("/");
-        } else {
-            res.status(400).send('Invalid password');
-        }
-    } catch (error) {
-        console.error('Error during login:', error);
-        res.status(500).send('An error occurred');
-        
-    }
-});
-router.post('/logout', (req, res) => {
-    req.session.destroy((err) => {
-    if (err) {
-        console.error('Error during logout:', err);
-        return res.status(500).send('Failed to log out.');
-    }
-      res.clearCookie('connect.sid'); // Clear session cookie
-      res.redirect('/login'); // Redirect to login
-    });
-});
-
-// Save Backup
-router.post('/backup/save', Functions.isAuthenticated, async (req, res) => {
-  try {
-    const baseDir = path.resolve('./backup');
-    const savedDir = await saveBackup(baseDir);
-    res.status(200).json({ message: 'Backup saved successfully' });
-  } catch (error) {
-    console.error('Error saving backup:', error);
-    res.status(500).json({ message: 'Failed to save backup' });
-  }
-});
-
-// Load Backup
-router.post('/backup/load', Functions.isAuthenticated, async (req, res) => {
-  try {
-    const baseDir = path.resolve('./backup');
-    await loadBackup(baseDir);
-    res.status(200).json({ message: 'Backup loaded successfully' });
-  } catch (error) {
-    console.error('Error loading backup:', error);
-    res.status(500).json({ message: 'Failed to load backup' });
-  }
-});
-
 // --- DENTAL CHART SAVE ROUTE (FIXED) ---
 router.post('/save-dental-chart', async (req, res) => {
     try {
         const patientID = req.body.patientID;
-        
+
         // Check if data is valid before parsing
         if (!req.body.chartData || !req.body.examData) {
             return res.status(400).json({ message: "Missing chart data." });
@@ -1100,10 +244,10 @@ router.post('/save-dental-chart', async (req, res) => {
         // Use findOneAndUpdate to bypass VersionError (__v)
         const updatedPatient = await Patient.findOneAndUpdate(
             { id: patientID }, // Find by your custom ID
-            { 
-                $set: { 
+            {
+                $set: {
                     dentalChart: chartData,
-                    dentalExam: examData 
+                    dentalExam: examData
                 }
             },
             { new: true, runValidators: false } // Return updated doc, skip strict validation if needed
